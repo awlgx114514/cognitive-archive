@@ -1,0 +1,105 @@
+:root {
+  color-scheme: dark;
+
+  /* Core palette — deep archive blue-black, restrained violet, cyan and aged gold. */
+  --bg-deep: #050610;
+  --bg-base: #080a18;
+  --bg-elevated: #0e1024;
+  --bg-panel: rgba(13, 15, 34, 0.78);
+  --bg-panel-strong: rgba(10, 12, 29, 0.92);
+  --bg-panel-soft: rgba(17, 19, 43, 0.56);
+  --bg-scrim: rgba(3, 4, 13, 0.82);
+
+  --violet-primary: #9782dc;
+  --violet-bright: #b6a3ef;
+  --violet-soft: #695a99;
+  --violet-deep: #302751;
+  --cyan-cold: #84b4c2;
+  --cyan-bright: #b5dce2;
+  --cyan-deep: #315968;
+  --silver: #c1c0ce;
+  --silver-muted: #858495;
+  --gold-muted: #ad9160;
+  --gold-bright: #d1b57c;
+  --danger: #d58d9e;
+
+  --text-primary: #f0edf7;
+  --text-secondary: #b1adbe;
+  --text-muted: #817d91;
+  --text-inverse: #080914;
+  --border-subtle: rgba(190, 179, 231, 0.17);
+  --border-medium: rgba(190, 179, 231, 0.28);
+  --border-cyan: rgba(132, 180, 194, 0.35);
+  --border-gold: rgba(173, 145, 96, 0.38);
+
+  --accent: var(--violet-primary);
+  --accent-soft: rgba(151, 130, 220, 0.18);
+  --accent-glow: rgba(151, 130, 220, 0.28);
+
+  --font-display: "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+  --font-body: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+  --text-xs: clamp(0.7rem, 0.67rem + 0.12vw, 0.76rem);
+  --text-sm: clamp(0.82rem, 0.79rem + 0.12vw, 0.9rem);
+  --text-md: clamp(0.96rem, 0.91rem + 0.2vw, 1.06rem);
+  --text-lg: clamp(1.08rem, 0.99rem + 0.38vw, 1.28rem);
+  --text-xl: clamp(1.3rem, 1.14rem + 0.7vw, 1.72rem);
+  --text-2xl: clamp(1.75rem, 1.37rem + 1.55vw, 2.7rem);
+  --text-hero: clamp(2.45rem, 1.62rem + 3.4vw, 5.2rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.8rem;
+  --radius-lg: 1.2rem;
+  --radius-xl: 1.75rem;
+  --radius-pill: 999px;
+
+  --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.32);
+  --shadow-deep: 0 34px 120px rgba(0, 0, 0, 0.5);
+  --shadow-violet: 0 0 42px rgba(124, 103, 192, 0.16);
+  --shadow-cyan: 0 0 34px rgba(94, 155, 170, 0.13);
+  --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+
+  --duration-fast: 160ms;
+  --duration-normal: 280ms;
+  --duration-slow: 700ms;
+  --duration-scene: 1100ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --content-narrow: 46rem;
+  --content-wide: 76rem;
+  --content-max: 90rem;
+  --header-height: 4.75rem;
+  --tap-target: 2.75rem;
+
+  --z-background: -1;
+  --z-base: 0;
+  --z-header: 20;
+  --z-overlay: 80;
+  --z-dialog: 90;
+  --z-dev: 120;
+}
+
+@media (max-width: 42rem) {
+  :root {
+    --header-height: 4.1rem;
+    --space-16: 3rem;
+    --space-20: 3.5rem;
+    --space-24: 4rem;
+  }
+}

@@ -1,0 +1,92 @@
+@keyframes archive-fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes archive-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes archive-panel-reveal {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: scale(0.988);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes archive-orbit {
+  to { transform: rotate(1turn); }
+}
+
+@keyframes archive-orbit-reverse {
+  to { transform: rotate(-1turn); }
+}
+
+@keyframes archive-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0.8rem, -1rem, 0); }
+}
+
+@keyframes archive-breathe {
+  0%, 100% { opacity: 0.38; transform: scale(0.98); }
+  50% { opacity: 0.66; transform: scale(1.025); }
+}
+
+@keyframes archive-star-shift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-2.5rem, 1.5rem, 0); }
+}
+
+@keyframes archive-scene-in {
+  from {
+    opacity: 0;
+    filter: blur(10px) brightness(0.7);
+    transform: scale(1.035);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes archive-progress-shimmer {
+  0% { transform: translateX(-130%); }
+  65%, 100% { transform: translateX(240%); }
+}
+
+@keyframes archive-selected-mark {
+  0% { opacity: 0; transform: scale(0.65) rotate(-18deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.motion-fade-in { animation: archive-fade-in var(--duration-slow) var(--ease-out) both; }
+.motion-fade-up { animation: archive-fade-up var(--duration-slow) var(--ease-out) both; }
+.motion-panel-reveal { animation: archive-panel-reveal var(--duration-slow) var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
