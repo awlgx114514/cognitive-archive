@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { testConfig } from "../data/testConfig";
 import type {
   AnswerOption,
@@ -47,6 +47,16 @@ export function QuestionScreen({
   onRequestHome,
 }: QuestionScreenProps) {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const revealDelayMs = Math.max(0, question.optionRevealDelayMs ?? 0);
+  const shouldDelayOptions = revealDelayMs > 0 && !selectedOptionId;
+  const [revealedQuestionId, setRevealedQuestionId] = useState<string | null>(
+    () => (shouldDelayOptions ? null : question.id),
+  );
+  const optionsRevealed =
+    !shouldDelayOptions || revealedQuestionId === question.id;
+  const [revealSecondsRemaining, setRevealSecondsRemaining] = useState(
+    () => Math.ceil(revealDelayMs / 1000),
+  );
   const formalOptions = useMemo(() => {
     const options = question.options as Partial<Record<string, AnswerOption>>;
     return ["A", "B", "C"]
@@ -78,9 +88,39 @@ export function QuestionScreen({
   }, [question.id]);
 
   useEffect(() => {
+    if (!shouldDelayOptions) {
+      setRevealedQuestionId(question.id);
+      setRevealSecondsRemaining(0);
+      return;
+    }
+
+    const revealAt = Date.now() + revealDelayMs;
+    const updateCountdown = () => {
+      setRevealSecondsRemaining(
+        Math.max(1, Math.ceil((revealAt - Date.now()) / 1000)),
+      );
+    };
+
+    setRevealedQuestionId(null);
+    updateCountdown();
+    const countdownId = window.setInterval(updateCountdown, 200);
+    const revealId = window.setTimeout(() => {
+      window.clearInterval(countdownId);
+      setRevealSecondsRemaining(0);
+      setRevealedQuestionId(question.id);
+    }, revealDelayMs);
+
+    return () => {
+      window.clearInterval(countdownId);
+      window.clearTimeout(revealId);
+    };
+  }, [question.id, revealDelayMs, shouldDelayOptions]);
+
+  useEffect(() => {
     const handleKeyboardAnswer = (event: KeyboardEvent) => {
       if (
         disabled ||
+        !optionsRevealed ||
         event.repeat ||
         event.altKey ||
         event.ctrlKey ||
@@ -107,7 +147,14 @@ export function QuestionScreen({
 
     window.addEventListener("keydown", handleKeyboardAnswer);
     return () => window.removeEventListener("keydown", handleKeyboardAnswer);
-  }, [canUseUncertain, disabled, formalOptionIds, formalOptions, onAnswer]);
+  }, [
+    canUseUncertain,
+    disabled,
+    formalOptionIds,
+    formalOptions,
+    onAnswer,
+    optionsRevealed,
+  ]);
 
   return (
     <section className="question-screen" aria-labelledby="question-title">
@@ -132,7 +179,11 @@ export function QuestionScreen({
         />
 
         <div className="question-copy">
-          <p className="question-eyebrow">请选择更接近当下真实状态的一侧</p>
+          <p className="question-eyebrow">
+            {optionsRevealed
+              ? "请选择更接近当下真实状态的一侧"
+              : "先停留在问题里，记录你的第一反应"}
+          </p>
           <h1
             ref={titleRef}
             className="question-title"
@@ -146,19 +197,34 @@ export function QuestionScreen({
           ) : null}
         </div>
 
-        <div className="answers-grid" aria-label="答案选项">
-          {formalOptions.map((option) => (
-            <AnswerCard
-              key={option.id}
-              option={option}
-              selected={selectedOptionId === option.id}
-              disabled={disabled}
-              onSelect={onAnswer}
-            />
-          ))}
-        </div>
+        {optionsRevealed ? (
+          <div className="answers-grid" aria-label="答案选项">
+            {formalOptions.map((option) => (
+              <AnswerCard
+                key={option.id}
+                option={option}
+                selected={selectedOptionId === option.id}
+                disabled={disabled}
+                onSelect={onAnswer}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="reflection-wait" role="status" aria-live="polite">
+            <span className="reflection-wait__count" aria-hidden="true">
+              {revealSecondsRemaining}
+            </span>
+            <p className="reflection-wait__title">先在心中留下第一反应</p>
+            <p className="reflection-wait__copy">
+              选项将在 {revealSecondsRemaining} 秒后显示
+            </p>
+          </div>
+        )}
 
-        {showUncertain && question.options.U && canUseUncertain ? (
+        {optionsRevealed &&
+        showUncertain &&
+        question.options.U &&
+        canUseUncertain ? (
           <UncertainButton
             option={question.options.U}
             selected={selectedOptionId === "U"}
@@ -169,7 +235,7 @@ export function QuestionScreen({
           />
         ) : null}
 
-        {showUncertain && !canUseUncertain ? (
+        {optionsRevealed && showUncertain && !canUseUncertain ? (
           <p className="uncertain-limit-note" role="status">
             当前线索需要你选择更接近自身状态的一侧。
           </p>
@@ -184,11 +250,15 @@ export function QuestionScreen({
           >
             <span aria-hidden="true">←</span> 返回上一条线索
           </button>
-          <p className="keyboard-hint" aria-hidden="true">
-            键盘快捷键 {formalOptionIds.join(" / ")}
-            {formalOptions.length ? ` · ${formalOptions.map((_, index) => index + 1).join(" / ")}` : ""}
-            {canUseUncertain ? " / U" : ""}
-          </p>
+          {optionsRevealed ? (
+            <p className="keyboard-hint" aria-hidden="true">
+              键盘快捷键 {formalOptionIds.join(" / ")}
+              {formalOptions.length ? ` · ${formalOptions.map((_, index) => index + 1).join(" / ")}` : ""}
+              {canUseUncertain ? " / U" : ""}
+            </p>
+          ) : (
+            <p className="keyboard-hint" aria-hidden="true">正在记录第一反应</p>
+          )}
         </footer>
       </div>
     </section>

@@ -20,6 +20,7 @@ type QuestionSeed = {
   id: string;
   question: string;
   detail?: string;
+  optionRevealDelayMs?: number;
   a: OptionSeed;
   b: OptionSeed;
   c?: OptionSeed;
@@ -54,6 +55,7 @@ function makeQuestion(seed: QuestionSeed): QuestionNode {
     shortQuestion: seed.question,
     question:
       seed.detail ?? "请按第一反应作答；这里没有更体面或更正确的选项。",
+    optionRevealDelayMs: seed.optionRevealDelayMs,
     options: {
       A: makeOption("A", seed.a),
       B: makeOption("B", seed.b),
@@ -126,7 +128,8 @@ function makeStoneQuestion(
     stage: "screening",
     question:
       "请想象：你在河边突然发现一块颜色、形状都很奇异的石头。写下第一反应后，你的念头更接近哪一类？",
-    detail: "不要推敲一个理想答案，只对照刚才真实出现的第一反应。",
+    detail: "请先写下或记住第一反应，不要提前推敲一个理想答案。",
+    optionRevealDelayMs: 3000,
     a: {
       title: "思考如何使用这块石头",
       text: "例如拍卖、收藏，或设想它能被怎样使用。",
@@ -153,7 +156,7 @@ export const questions: QuestionNode[] = [
     id: "Q_START",
     stage: "screening",
     question:
-      "请闭上双眼。你脑海中的记忆片段更像静态的相片、动态的电影（或音频），还是只能动很短的几秒？",
+      "请闭上双眼，你脑海中的记忆片段像静态的相片？还是动态的电影（或音频），仿佛重新置身其中？",
     detail: "选择最接近你自然回忆状态的一项。",
     a: {
       title: "相片",
@@ -161,12 +164,12 @@ export const questions: QuestionNode[] = [
       nextQuestionId: "Q_STONE_A",
     },
     b: {
-      title: "电影或音频",
+      title: "电影",
       text: "记忆会连续展开，像电影片段或一段声音。",
       nextQuestionId: "Q_STONE_B",
     },
     c: {
-      title: "能动，但很短",
+      title: "能动，太短点，就几秒。",
       text: "片段会动，却通常只有几秒。",
       nextQuestionId: "Q_STONE_C",
     },

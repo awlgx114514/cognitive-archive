@@ -48,6 +48,8 @@ export type QuestionNode = {
   traceCode: string;
   question: string;
   shortQuestion?: string;
+  /** Optional pause before answer choices are revealed. */
+  optionRevealDelayMs?: number;
   options: QuestionOptions;
   allowUncertain?: boolean;
   transitionSceneId: string;

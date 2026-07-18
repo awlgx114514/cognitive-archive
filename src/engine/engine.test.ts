@@ -42,6 +42,13 @@ describe("supplied question graph", () => {
   });
 
   it("routes the first two answers to exactly aa/ab/ba/bb/ca/cb", () => {
+    expect(getQuestionById("Q_START")?.shortQuestion).toBe(
+      "请闭上双眼，你脑海中的记忆片段像静态的相片？还是动态的电影（或音频），仿佛重新置身其中？",
+    );
+    expect(getQuestionById("Q_START")?.options.B.title).toBe("电影");
+    expect(getQuestionById("Q_START")?.options.C?.title).toBe(
+      "能动，太短点，就几秒。",
+    );
     expect(getQuestionById("Q_START")?.options.A.nextQuestionId).toBe("Q_STONE_A");
     expect(getQuestionById("Q_START")?.options.B.nextQuestionId).toBe("Q_STONE_B");
     expect(getQuestionById("Q_START")?.options.C?.nextQuestionId).toBe("Q_STONE_C");
@@ -52,6 +59,9 @@ describe("supplied question graph", () => {
     expect(getQuestionById("Q_STONE_B")?.options.B.nextQuestionId).toBe("Q_BB_3");
     expect(getQuestionById("Q_STONE_C")?.options.A.nextQuestionId).toBe("Q_CA_CAL");
     expect(getQuestionById("Q_STONE_C")?.options.B.nextQuestionId).toBe("Q_CB_CAL");
+    expect(getQuestionById("Q_STONE_A")?.optionRevealDelayMs).toBe(3000);
+    expect(getQuestionById("Q_STONE_B")?.optionRevealDelayMs).toBe(3000);
+    expect(getQuestionById("Q_STONE_C")?.optionRevealDelayMs).toBe(3000);
   });
 
   it.each([
