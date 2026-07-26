@@ -6,7 +6,7 @@ export const testConfig: TestConfig = {
   minimumPathLength: 15,
   recommendedPathLength: 15,
   maximumPathLength: 15,
-  storageVersion: "5.0.0",
+  storageVersion: "6.0.0",
 };
 
 export const TEST_STORAGE_KEY = "cognitive-archive:test-session";

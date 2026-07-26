@@ -36,6 +36,7 @@ const matchingBankAnswers: Record<
   FirstGodId | SecondGodId,
   readonly AnswerOptionId[]
 > = {
+  // These are the options shown in bold in the supplied Word question bank.
   1: ["A", "A", "A", "A", "B", "A"],
   2: ["B", "B", "A", "B", "A", "A"],
   3: ["A", "B", "B", "B", "B", "B"],
@@ -45,6 +46,32 @@ const matchingBankAnswers: Record<
   7: ["A", "A", "A", "B", "B", "B"],
   8: ["B", "B", "B", "B", "B", "A"],
 };
+
+const earlyPairs = {
+  1: 2,
+  2: 1,
+  3: 4,
+  4: 3,
+  5: 6,
+  6: 5,
+  7: 8,
+  8: 7,
+} as const;
+
+const middlePairs = {
+  1: 3,
+  2: 4,
+  3: 1,
+  4: 2,
+  5: 7,
+  6: 8,
+  7: 5,
+  8: 6,
+} as const;
+
+function opposite(optionId: AnswerOptionId): AnswerOptionId {
+  return optionId === "A" ? "B" : "A";
+}
 
 function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
   let session = startTestSession(createTestSession(1), 1);
@@ -134,6 +161,42 @@ describe("revised four-corner question graph", () => {
     expect(bothMatch.currentQuestionId).toBe("Q_R1_G1_3");
   });
 
+  it.each([1, 2, 3, 4] as const)(
+    "keeps first-round deity %s after both bold answers in questions 1–2",
+    (godId) => {
+      const [firstAnswer, secondAnswer] = matchingBankAnswers[godId];
+      const session = answerPath([
+        firstSelectionAnswers[godId],
+        firstAnswer,
+        secondAnswer,
+      ]);
+
+      expect(session.currentQuestionId).toBe(`Q_R1_G${godId}_3`);
+    },
+  );
+
+  it.each([1, 2, 3, 4] as const)(
+    "switches first-round deity %s after either question 1–2 answer misses",
+    (godId) => {
+      const [firstAnswer, secondAnswer] = matchingBankAnswers[godId];
+      const switchedGodId = earlyPairs[godId];
+
+      const firstMiss = answerPath([
+        firstSelectionAnswers[godId],
+        opposite(firstAnswer),
+        secondAnswer,
+      ]);
+      const secondMiss = answerPath([
+        firstSelectionAnswers[godId],
+        firstAnswer,
+        opposite(secondAnswer),
+      ]);
+
+      expect(firstMiss.currentQuestionId).toBe(`Q_R1_G${switchedGodId}_3`);
+      expect(secondMiss.currentQuestionId).toBe(`Q_R1_G${switchedGodId}_3`);
+    },
+  );
+
   it("switches 1↔3 after questions 3–4 only when both answers miss", () => {
     const bothMiss = answerPath(["A", "A", "A", "B", "B"]);
     expect(bothMiss.currentQuestionId).toBe("Q_R1_G3_5");
@@ -144,6 +207,40 @@ describe("revised four-corner question graph", () => {
     const onlyFourthMisses = answerPath(["A", "A", "A", "A", "B"]);
     expect(onlyFourthMisses.currentQuestionId).toBe("Q_R1_G1_5");
   });
+
+  it.each([1, 2, 3, 4] as const)(
+    "keeps first-round deity %s after both bold answers in questions 3–4",
+    (godId) => {
+      const [first, second, third, fourth] = matchingBankAnswers[godId];
+      const session = answerPath([
+        firstSelectionAnswers[godId],
+        first,
+        second,
+        third,
+        fourth,
+      ]);
+
+      expect(session.currentQuestionId).toBe(`Q_R1_G${godId}_5`);
+    },
+  );
+
+  it.each([1, 2, 3, 4] as const)(
+    "switches first-round deity %s only when questions 3–4 both miss",
+    (godId) => {
+      const [first, second, third, fourth] = matchingBankAnswers[godId];
+      const session = answerPath([
+        firstSelectionAnswers[godId],
+        first,
+        second,
+        opposite(third),
+        opposite(fourth),
+      ]);
+
+      expect(session.currentQuestionId).toBe(
+        `Q_R1_G${middlePairs[godId]}_5`,
+      );
+    },
+  );
 
   it("never switches after questions 5–6", () => {
     const session = answerPath([
@@ -179,6 +276,24 @@ describe("revised four-corner question graph", () => {
     ]);
     expect(middleSwitch.currentQuestionId).toBe("Q_R2_F1_G7_5");
   });
+
+  it.each([5, 6, 7, 8] as const)(
+    "keeps second-round deity %s after all bold answers in questions 1–4",
+    (godId) => {
+      const [first, second, third, fourth] = matchingBankAnswers[godId];
+      const session = answerPath([
+        firstSelectionAnswers[1],
+        ...matchingBankAnswers[1],
+        secondSelectionAnswers[godId],
+        first,
+        second,
+        third,
+        fourth,
+      ]);
+
+      expect(session.currentQuestionId).toBe(`Q_R2_F1_G${godId}_5`);
+    },
+  );
 
   it.each([
     ["Q_R1_G1_2_C", "B", "Q_R1_G2_3"],

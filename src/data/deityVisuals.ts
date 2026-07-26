@@ -13,42 +13,42 @@ const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path}`;
 export const deityVisuals: Readonly<Record<DeityId, DeityVisual>> = {
   1: {
     id: 1,
-    portrait: assetUrl("images/deities/portraits/01-se.webp"),
+    portrait: assetUrl("images/deities/portraits/01-se-lite.webp"),
     background: assetUrl("images/deities/backgrounds/01-se.webp"),
   },
   2: {
     id: 2,
-    portrait: assetUrl("images/deities/portraits/02-ne.webp"),
+    portrait: assetUrl("images/deities/portraits/02-ne-lite.webp"),
     background: assetUrl("images/deities/backgrounds/02-ne.webp"),
   },
   3: {
     id: 3,
-    portrait: assetUrl("images/deities/portraits/03-si.webp"),
+    portrait: assetUrl("images/deities/portraits/03-si-lite.webp"),
     background: assetUrl("images/deities/backgrounds/03-si.webp"),
   },
   4: {
     id: 4,
-    portrait: assetUrl("images/deities/portraits/04-ni.webp"),
+    portrait: assetUrl("images/deities/portraits/04-ni-lite.webp"),
     background: assetUrl("images/deities/backgrounds/04-ni.webp"),
   },
   5: {
     id: 5,
-    portrait: assetUrl("images/deities/portraits/05-te.webp"),
+    portrait: assetUrl("images/deities/portraits/05-te-lite.webp"),
     background: assetUrl("images/deities/backgrounds/05-te.webp"),
   },
   6: {
     id: 6,
-    portrait: assetUrl("images/deities/portraits/06-fe.webp"),
+    portrait: assetUrl("images/deities/portraits/06-fe-lite.webp"),
     background: assetUrl("images/deities/backgrounds/06-fe.webp"),
   },
   7: {
     id: 7,
-    portrait: assetUrl("images/deities/portraits/07-ti.webp"),
+    portrait: assetUrl("images/deities/portraits/07-ti-lite.webp"),
     background: assetUrl("images/deities/backgrounds/07-ti.webp"),
   },
   8: {
     id: 8,
-    portrait: assetUrl("images/deities/portraits/08-fi.webp"),
+    portrait: assetUrl("images/deities/portraits/08-fi-lite.webp"),
     background: assetUrl("images/deities/backgrounds/08-fi.webp"),
   },
 };
