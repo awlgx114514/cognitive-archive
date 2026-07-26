@@ -29,7 +29,7 @@ function allRuntimeOptions(
   const optionRecord = question.options as Partial<
     Record<AnswerOptionId, AnswerOption>
   >;
-  return (["A", "B", "C", "U"] as const).flatMap(
+  return (["A", "B", "C", "D", "U"] as const).flatMap(
     (optionId): Array<[AnswerOptionId, AnswerOption]> => {
       const option = optionRecord[optionId];
       return option ? [[optionId, option]] : [];

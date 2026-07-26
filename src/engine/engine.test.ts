@@ -15,6 +15,37 @@ import { analyzeConfiguredPaths } from "./pathAnalysis";
 import { calculateResult } from "./resultResolver";
 import { validateDemoContent } from "./validation";
 
+type FirstGodId = 1 | 2 | 3 | 4;
+type SecondGodId = 5 | 6 | 7 | 8;
+
+const firstScreeningAnswers: Record<FirstGodId, readonly AnswerOptionId[]> = {
+  1: ["A", "B"],
+  2: ["B", "B"],
+  3: ["A", "A"],
+  4: ["B", "A"],
+};
+
+const secondScreeningAnswers: Record<SecondGodId, readonly AnswerOptionId[]> = {
+  5: ["A", "A"],
+  6: ["B", "A"],
+  7: ["A", "B"],
+  8: ["B", "B"],
+};
+
+const matchingBankAnswers: Record<
+  FirstGodId | SecondGodId,
+  readonly AnswerOptionId[]
+> = {
+  1: ["A", "A", "A", "A", "B", "A"],
+  2: ["B", "B", "A", "B", "A", "A"],
+  3: ["A", "B", "B", "B", "B", "B"],
+  4: ["A", "A", "B", "A", "A", "B"],
+  5: ["B", "A", "B", "A", "B", "B"],
+  6: ["A", "B", "A", "A", "A", "A"],
+  7: ["A", "A", "A", "B", "B", "B"],
+  8: ["B", "B", "B", "B", "B", "A"],
+};
+
 function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
   let session = startTestSession(createTestSession(1), 1);
   answerIds.forEach((answerId, index) => {
@@ -28,123 +59,232 @@ function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
   return session;
 }
 
-describe("supplied question graph", () => {
-  it("is valid and covers the configured 3–6 question range", () => {
+function completedPath(
+  firstGodId: FirstGodId,
+  secondGodId: SecondGodId,
+  finalOptionId: "A" | "B" | "C" | "D",
+): TestSession {
+  return answerPath([
+    ...firstScreeningAnswers[firstGodId],
+    ...matchingBankAnswers[firstGodId],
+    ...secondScreeningAnswers[secondGodId],
+    ...matchingBankAnswers[secondGodId],
+    finalOptionId,
+  ]);
+}
+
+describe("revised four-corner question graph", () => {
+  it("is valid and every complete route contains 17 questions", () => {
     const report = validateDemoContent();
     const analysis = analyzeConfiguredPaths();
 
     expect(report.valid).toBe(true);
     expect(report.errors).toHaveLength(0);
-    expect(analysis.shortestPathLength).toBe(testConfig.minimumPathLength);
-    expect(analysis.longestPathLength).toBe(testConfig.maximumPathLength);
-    expect(analysis.completePaths.some((path) => path.length === 3)).toBe(true);
-    expect(analysis.completePaths.some((path) => path.length === 6)).toBe(true);
+    expect(analysis.incompletePaths).toHaveLength(0);
+    expect(analysis.shortestPathLength).toBe(17);
+    expect(analysis.longestPathLength).toBe(17);
+    expect(testConfig.minimumPathLength).toBe(17);
+    expect(testConfig.maximumPathLength).toBe(17);
   });
 
-  it("routes the first two answers to exactly aa/ab/ba/bb/ca/cb", () => {
+  it("uses the supplied first-round screening questions", () => {
     expect(getQuestionById("Q_START")?.shortQuestion).toBe(
-      "请闭上双眼，你脑海中的记忆片段像静态的相片？还是动态的电影（或音频），仿佛重新置身其中？",
+      "你更关注事物的实际细节，还是抽象概念？",
     );
-    expect(getQuestionById("Q_START")?.options.B.title).toBe("电影");
-    expect(getQuestionById("Q_START")?.options.C?.title).toBe(
-      "能动，太短点，就几秒。",
+    expect(getQuestionById("Q_START")?.options.A.nextQuestionId).toBe(
+      "Q_R1_STYLE_S",
     );
-    expect(getQuestionById("Q_START")?.options.A.nextQuestionId).toBe("Q_STONE_A");
-    expect(getQuestionById("Q_START")?.options.B.nextQuestionId).toBe("Q_STONE_B");
-    expect(getQuestionById("Q_START")?.options.C?.nextQuestionId).toBe("Q_STONE_C");
+    expect(getQuestionById("Q_R1_STYLE_S")?.options.A.nextQuestionId).toBe(
+      "Q_R1_G3_1",
+    );
+    expect(getQuestionById("Q_R1_STYLE_S")?.options.B.nextQuestionId).toBe(
+      "Q_R1_G1_1",
+    );
+    expect(getQuestionById("Q_R1_STYLE_N")?.options.A.nextQuestionId).toBe(
+      "Q_R1_G4_1",
+    );
+    expect(getQuestionById("Q_R1_STYLE_N")?.options.B.nextQuestionId).toBe(
+      "Q_R1_G2_1",
+    );
+  });
 
-    expect(getQuestionById("Q_STONE_A")?.options.A.nextQuestionId).toBe("Q_AA_3");
-    expect(getQuestionById("Q_STONE_A")?.options.B.nextQuestionId).toBe("Q_AB_3");
-    expect(getQuestionById("Q_STONE_B")?.options.A.nextQuestionId).toBe("Q_BA_3");
-    expect(getQuestionById("Q_STONE_B")?.options.B.nextQuestionId).toBe("Q_BB_3");
-    expect(getQuestionById("Q_STONE_C")?.options.A.nextQuestionId).toBe("Q_CA_CAL");
-    expect(getQuestionById("Q_STONE_C")?.options.B.nextQuestionId).toBe("Q_CB_CAL");
-    expect(getQuestionById("Q_STONE_A")?.optionRevealDelayMs).toBe(3000);
-    expect(getQuestionById("Q_STONE_B")?.optionRevealDelayMs).toBe(3000);
-    expect(getQuestionById("Q_STONE_C")?.optionRevealDelayMs).toBe(3000);
+  it("switches 1↔2 after questions 1–2 when either answer misses", () => {
+    const firstMisses = answerPath(["A", "B", "B", "A"]);
+    expect(firstMisses.currentQuestionId).toBe("Q_R1_G2_3");
+
+    const secondMisses = answerPath(["A", "B", "A", "B"]);
+    expect(secondMisses.currentQuestionId).toBe("Q_R1_G2_3");
+
+    const bothMatch = answerPath(["A", "B", "A", "A"]);
+    expect(bothMatch.currentQuestionId).toBe("Q_R1_G1_3");
+  });
+
+  it("switches 1↔3 after questions 3–4 only when both answers miss", () => {
+    const bothMiss = answerPath(["A", "B", "A", "A", "B", "B"]);
+    expect(bothMiss.currentQuestionId).toBe("Q_R1_G3_5");
+
+    const onlyThirdMisses = answerPath(["A", "B", "A", "A", "B", "A"]);
+    expect(onlyThirdMisses.currentQuestionId).toBe("Q_R1_G1_5");
+
+    const onlyFourthMisses = answerPath(["A", "B", "A", "A", "A", "B"]);
+    expect(onlyFourthMisses.currentQuestionId).toBe("Q_R1_G1_5");
+  });
+
+  it("never switches after questions 5–6", () => {
+    const session = answerPath([
+      "A",
+      "B",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "B",
+    ]);
+    expect(session.currentQuestionId).toBe("Q_R2_DECISION_F1");
+  });
+
+  it("applies the same early and middle switch rules in the second round", () => {
+    const earlySwitch = answerPath([
+      ...firstScreeningAnswers[1],
+      ...matchingBankAnswers[1],
+      ...secondScreeningAnswers[5],
+      "A",
+      "A",
+    ]);
+    expect(earlySwitch.currentQuestionId).toBe("Q_R2_F1_G6_3");
+
+    const middleSwitch = answerPath([
+      ...firstScreeningAnswers[1],
+      ...matchingBankAnswers[1],
+      ...secondScreeningAnswers[5],
+      "B",
+      "A",
+      "A",
+      "B",
+    ]);
+    expect(middleSwitch.currentQuestionId).toBe("Q_R2_F1_G7_5");
   });
 
   it.each([
-    ["ESFP", ["A", "A", "A", "A", "A", "A"]],
-    ["ISFP", ["A", "A", "A", "B", "B", "B"]],
-    ["ENTJ", ["A", "A", "B", "A", "A", "A"]],
-    ["INTJ", ["A", "A", "B", "B", "B", "B"]],
-    ["ESTP", ["A", "B", "A", "A", "A", "A"]],
-    ["ISTP", ["A", "B", "A", "B", "B", "B"]],
-    ["ENFJ", ["A", "B", "B", "A", "A", "A"]],
-    ["INFJ", ["A", "B", "B", "B", "B", "B"]],
-    ["ESTJ", ["B", "A", "A", "A", "A", "A"]],
-    ["ISTJ", ["B", "A", "A", "B", "B", "B"]],
-    ["INFP", ["B", "A", "B", "A"]],
-    ["ESFJ", ["B", "B", "A", "A", "A", "A"]],
-    ["ISFJ", ["B", "B", "A", "B", "B", "B"]],
-    ["INTP", ["B", "B", "B", "A"]],
-    ["ENFP", ["C", "A", "A"]],
-    ["ENTP", ["C", "B", "A"]],
-  ] as const)("can complete a confirmed %s path", (expectedType, answerIds) => {
-    const session = answerPath(answerIds);
-    const result = calculateResult(session.history, questions);
+    ["Q_R1_G1_2_C", "B", "Q_R1_G2_3"],
+    ["Q_R1_G2_2_C", "A", "Q_R1_G1_3"],
+    ["Q_R1_G3_2_C", "A", "Q_R1_G4_3"],
+    ["Q_R1_G4_2_C", "B", "Q_R1_G3_3"],
+    ["Q_R2_F1_G5_2_C", "B", "Q_R2_F1_G6_3"],
+    ["Q_R2_F1_G6_2_C", "A", "Q_R2_F1_G5_3"],
+    ["Q_R2_F1_G7_2_C", "B", "Q_R2_F1_G8_3"],
+    ["Q_R2_F1_G8_2_C", "A", "Q_R2_F1_G7_3"],
+  ] as const)(
+    "uses the required early pair at %s",
+    (questionId, wrongOptionId, expectedNextId) => {
+      expect(
+        getQuestionById(questionId)?.options[wrongOptionId].nextQuestionId,
+      ).toBe(expectedNextId);
+    },
+  );
 
-    expect(session.status).toBe("completed");
-    expect(result.resultTypeId).toBe(expectedType);
-    expect(result.needsRetest).toBe(false);
-    expect(result).not.toHaveProperty("functionScores");
-    expect(result).not.toHaveProperty("typeScores");
-    expect(result).not.toHaveProperty("confidence");
-    expect(result).not.toHaveProperty("secondaryTypeId");
-  });
+  it.each([
+    ["Q_R1_G1_4_W", "B", "Q_R1_G3_5"],
+    ["Q_R1_G2_4_W", "A", "Q_R1_G4_5"],
+    ["Q_R1_G3_4_W", "A", "Q_R1_G1_5"],
+    ["Q_R1_G4_4_W", "B", "Q_R1_G2_5"],
+    ["Q_R2_F1_G5_4_W", "B", "Q_R2_F1_G7_5"],
+    ["Q_R2_F1_G6_4_W", "B", "Q_R2_F1_G8_5"],
+    ["Q_R2_F1_G7_4_W", "A", "Q_R2_F1_G5_5"],
+    ["Q_R2_F1_G8_4_W", "A", "Q_R2_F1_G6_5"],
+  ] as const)(
+    "uses the required middle pair at %s",
+    (questionId, wrongOptionId, expectedNextId) => {
+      expect(
+        getQuestionById(questionId)?.options[wrongOptionId].nextQuestionId,
+      ).toBe(expectedNextId);
+    },
+  );
+
+  it.each([
+    [1, 5, "ESFP"],
+    [1, 6, "ESTP"],
+    [1, 7, "ESTP"],
+    [1, 8, "ESFP"],
+    [2, 5, "ENFP"],
+    [2, 6, "ENTP"],
+    [2, 7, "ENTP"],
+    [2, 8, "ENFP"],
+    [3, 5, "ENFP"],
+    [3, 6, "ENTP"],
+    [3, 7, "ENTP"],
+    [3, 8, "ENFP"],
+    [4, 5, "ESFP"],
+    [4, 6, "ESTP"],
+    [4, 7, "ESTP"],
+    [4, 8, "ESFP"],
+  ] as const)(
+    "maps deity pair %s%s to the correct final group",
+    (firstGodId, secondGodId, expectedTypeForOptionA) => {
+      const session = completedPath(firstGodId, secondGodId, "A");
+      const result = calculateResult(session.history, questions);
+      expect(result.resultTypeId).toBe(expectedTypeForOptionA);
+    },
+  );
+
+  it.each([
+    ["ESFP", 1, 5, "A"],
+    ["ENTJ", 1, 5, "B"],
+    ["INTJ", 1, 5, "C"],
+    ["ISFP", 1, 5, "D"],
+    ["ESTP", 1, 6, "A"],
+    ["ENFJ", 1, 6, "B"],
+    ["INFJ", 1, 6, "C"],
+    ["ISTP", 1, 6, "D"],
+    ["ENFP", 2, 5, "A"],
+    ["ESTJ", 2, 5, "B"],
+    ["ISTJ", 2, 5, "C"],
+    ["INFP", 2, 5, "D"],
+    ["ENTP", 2, 6, "A"],
+    ["ESFJ", 2, 6, "B"],
+    ["ISFJ", 2, 6, "C"],
+    ["INTP", 2, 6, "D"],
+  ] as const)(
+    "can complete a %s route",
+    (expectedType, firstGodId, secondGodId, finalOptionId) => {
+      const session = completedPath(
+        firstGodId,
+        secondGodId,
+        finalOptionId,
+      );
+      const result = calculateResult(session.history, questions);
+
+      expect(session.status).toBe("completed");
+      expect(session.history).toHaveLength(17);
+      expect(result.resultTypeId).toBe(expectedType);
+      expect(result.needsRetest).toBe(false);
+    },
+  );
 });
 
-describe("session and calibration invariants", () => {
-  it("supports C on the first screening item and keeps U unavailable", () => {
-    const startQuestion = getQuestionById(testConfig.startQuestionId)!;
-    expect(getAnswerAvailability(startQuestion, "C", []).allowed).toBe(true);
-    expect(getAnswerAvailability(startQuestion, "U", []).allowed).toBe(false);
+describe("session invariants", () => {
+  it("allows four final choices while keeping uncertain unavailable", () => {
+    const finalQuestion = getQuestionById("Q_FINAL_GROUP_1")!;
+    expect(getAnswerAvailability(finalQuestion, "D", []).allowed).toBe(true);
+    expect(getAnswerAvailability(finalQuestion, "U", []).allowed).toBe(false);
     expect(questions.some((question) => question.options.U)).toBe(false);
   });
 
   it("truncates a stale suffix after an upstream edit", () => {
-    let session = answerPath(["A", "A", "A", "A"]);
-
+    let session = answerPath(["A", "B", "A", "A"]);
     session = goBackOneStep(session);
-    const changed = answerQuestion(session, "B", { answeredAt: 9 }).session;
 
+    const changed = answerQuestion(session, "B", { answeredAt: 9 }).session;
     expect(changed.history).toHaveLength(4);
     expect(changed.history[3]?.selectedOptionId).toBe("B");
-    expect(changed.history[3]).not.toHaveProperty("scoreEffects");
+    expect(changed.currentQuestionId).toBe("Q_R1_G2_3");
   });
 
-  it("marks a unique-vote/calibration conflict for retest", () => {
-    const session = answerPath(["A", "A", "A", "A", "A", "B"]);
-    const result = calculateResult(session.history, questions);
-
-    expect(result.resultTypeId).toBe("ISFP");
-    expect(result.calibrationMatched).toBe(false);
-    expect(result.needsRetest).toBe(true);
-    expect(result.retestReason).toContain("不一致");
-  });
-
-  it("lets calibration resolve a split vote without a false conflict", () => {
-    const session = answerPath(["A", "A", "A", "A", "B", "B"]);
-    const result = calculateResult(session.history, questions);
-
-    expect(result.resultTypeId).toBe("ISFP");
-    expect(result.needsRetest).toBe(false);
-  });
-
-  it("marks an explicit single-type calibration rejection for retest", () => {
-    const session = answerPath(["C", "A", "B"]);
-    const result = calculateResult(session.history, questions);
-
-    expect(result.resultTypeId).toBe("ENFP");
-    expect(result.needsRetest).toBe(true);
-    expect(result.retestReason).toContain("未通过");
-  });
-
-  it("does not fall back to a score when terminal calibration data is missing", () => {
-    const session = answerPath(["C", "A", "A"]);
+  it("does not generate a result when terminal calibration data is missing", () => {
+    const session = completedPath(1, 5, "A");
     const brokenQuestions = questions.map((question) =>
-      question.id === "Q_CA_CAL"
+      question.id === "Q_FINAL_GROUP_1"
         ? {
             ...question,
             options: {

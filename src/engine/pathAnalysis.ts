@@ -24,6 +24,7 @@ function structuralRoutes(question: QuestionNode): StructuralRoute[] {
     question.options.A,
     question.options.B,
     ...(question.options.C ? [question.options.C] : []),
+    ...(question.options.D ? [question.options.D] : []),
     ...(question.options.U ? [question.options.U] : []),
   ].filter(Boolean);
   const grouped = new Map<string, StructuralRoute>();

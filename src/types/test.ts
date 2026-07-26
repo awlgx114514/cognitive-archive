@@ -11,7 +11,7 @@ export const FUNCTION_KEYS = [
 
 export type FunctionKey = (typeof FUNCTION_KEYS)[number];
 
-export const ANSWER_OPTION_IDS = ["A", "B", "C", "U"] as const;
+export const ANSWER_OPTION_IDS = ["A", "B", "C", "D", "U"] as const;
 
 export type AnswerOptionId = (typeof ANSWER_OPTION_IDS)[number];
 
@@ -34,6 +34,7 @@ export type QuestionOptions = {
   A: AnswerOption;
   B: AnswerOption;
   C?: AnswerOption;
+  D?: AnswerOption;
   U?: AnswerOption;
 };
 

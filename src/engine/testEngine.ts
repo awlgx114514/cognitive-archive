@@ -142,7 +142,7 @@ export function getAvailableOptions(
   history: readonly HistoryEntry[],
   config: TestConfig = demoTestConfig,
 ): AnswerOption[] {
-  return (["A", "B", "C", "U"] as const)
+  return (["A", "B", "C", "D", "U"] as const)
     .map((optionId) => question.options[optionId])
     .filter((option): option is AnswerOption => Boolean(option))
     .filter((option) => canSelectOption(question, option.id, history, config));

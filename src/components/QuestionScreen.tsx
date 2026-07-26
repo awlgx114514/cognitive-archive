@@ -59,7 +59,7 @@ export function QuestionScreen({
   );
   const formalOptions = useMemo(() => {
     const options = question.options as Partial<Record<string, AnswerOption>>;
-    return ["A", "B", "C"]
+    return ["A", "B", "C", "D"]
       .map((optionId) => options[optionId])
       .filter((option): option is AnswerOption => Boolean(option));
   }, [question.options]);
