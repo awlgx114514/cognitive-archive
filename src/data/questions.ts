@@ -109,6 +109,22 @@ function routedOption(
   };
 }
 
+function godSelectionOption(
+  godId: GodId,
+  nextQuestionId: string,
+): OptionSeed {
+  const god = gods[godId];
+  return {
+    title: god.name,
+    text: god.description,
+    nextQuestionId,
+  };
+}
+
+function secondRoundSelectionId(firstGodId: FirstGodId): string {
+  return `Q_R2_GOD_SELECT_F${firstGodId}`;
+}
+
 function makeRoutedBankQuestion({
   id,
   god,
@@ -653,8 +669,8 @@ function makeFirstRoundGodQuestions(godId: FirstGodId): QuestionNode[] {
       god,
       ordinal: 6,
       question: god.questions[5],
-      correctNext: `Q_R2_DECISION_F${godId}`,
-      wrongNext: `Q_R2_DECISION_F${godId}`,
+      correctNext: secondRoundSelectionId(godId),
+      wrongNext: secondRoundSelectionId(godId),
       round: "第一阶 · 目门位",
     }),
   ];
@@ -756,63 +772,31 @@ function makeSecondRoundGodQuestions(
   ];
 }
 
-function makeSecondRoundScreening(firstGodId: FirstGodId): QuestionNode[] {
-  return [
-    makeQuestion({
-      id: `Q_R2_DECISION_F${firstGodId}`,
-      stage: "screening",
-      question:
-        "做决定时，你更看重逻辑和客观分析，还是他人感受和价值取向？",
-      detail:
-        "第二阶 · 黄庭位初筛：这一轮将在紫薇大帝、闻苦天尊、空悟道人与逍遥散人之间定位。",
-      a: {
-        title: "逻辑与客观分析",
-        text: "我会优先依据逻辑、事实和客观分析。",
-        nextQuestionId: `Q_R2_STYLE_T_F${firstGodId}`,
-      },
-      b: {
-        title: "他人感受与价值取向",
-        text: "我会优先考虑他人感受和价值取向。",
-        nextQuestionId: `Q_R2_STYLE_F_F${firstGodId}`,
-      },
-    }),
-    makeQuestion({
-      id: `Q_R2_STYLE_T_F${firstGodId}`,
-      stage: "screening",
-      question:
-        "你更喜欢提前规划、按时完成，还是在最后时刻冲刺完成？",
-      detail:
-        "第二阶 · 黄庭位初筛：请继续按最自然、最常见的状态选择。",
-      a: {
-        title: "提前规划，按时完成",
-        text: "我习惯提前安排并按计划完成。",
-        nextQuestionId: secondRoundQuestionId(firstGodId, 5, 1),
-      },
-      b: {
-        title: "最后时刻冲刺",
-        text: "我更常在临近截止时集中冲刺。",
-        nextQuestionId: secondRoundQuestionId(firstGodId, 7, 1),
-      },
-    }),
-    makeQuestion({
-      id: `Q_R2_STYLE_F_F${firstGodId}`,
-      stage: "screening",
-      question:
-        "你更喜欢提前规划、按时完成，还是在最后时刻冲刺完成？",
-      detail:
-        "第二阶 · 黄庭位初筛：请继续按最自然、最常见的状态选择。",
-      a: {
-        title: "提前规划，按时完成",
-        text: "我习惯提前安排并按计划完成。",
-        nextQuestionId: secondRoundQuestionId(firstGodId, 6, 1),
-      },
-      b: {
-        title: "最后时刻冲刺",
-        text: "我更常在临近截止时集中冲刺。",
-        nextQuestionId: secondRoundQuestionId(firstGodId, 8, 1),
-      },
-    }),
-  ];
+function makeSecondRoundSelection(
+  firstGodId: FirstGodId,
+): QuestionNode {
+  return makeQuestion({
+    id: secondRoundSelectionId(firstGodId),
+    question: "第二轮：请选择最吸引你的神祇。",
+    detail:
+      "第二阶 · 黄庭位：从四位神祇中选择一位，进入对应题库。",
+    a: godSelectionOption(
+      5,
+      secondRoundQuestionId(firstGodId, 5, 1),
+    ),
+    b: godSelectionOption(
+      6,
+      secondRoundQuestionId(firstGodId, 6, 1),
+    ),
+    c: godSelectionOption(
+      7,
+      secondRoundQuestionId(firstGodId, 7, 1),
+    ),
+    d: godSelectionOption(
+      8,
+      secondRoundQuestionId(firstGodId, 8, 1),
+    ),
+  });
 }
 
 function terminalOption(
@@ -858,64 +842,22 @@ function makeFinalQuestion(
   };
 }
 
-const firstRoundScreening: QuestionNode[] = [
-  makeQuestion({
-    id: "Q_START",
-    stage: "screening",
-    question: "你更关注事物的实际细节，还是抽象概念？",
-    detail:
-      "第一阶 · 目门位初筛：这一轮将在现世主宰、异界星君、太史文官与太虚灵官之间定位。",
-    a: {
-      title: "实际细节",
-      text: "我通常先注意具体、可观察的实际细节。",
-      nextQuestionId: "Q_R1_STYLE_S",
-    },
-    b: {
-      title: "抽象概念",
-      text: "我通常先注意抽象含义、概念和可能性。",
-      nextQuestionId: "Q_R1_STYLE_N",
-    },
-  }),
-  makeQuestion({
-    id: "Q_R1_STYLE_S",
-    stage: "screening",
-    question: "你更喜欢有计划、有安排，还是灵活应变？",
-    detail: "第一阶 · 目门位初筛：请按最自然、最常见的状态选择。",
-    a: {
-      title: "有计划、有安排",
-      text: "我更习惯提前安排，并依照计划推进。",
-      nextQuestionId: firstRoundQuestionId(3, 1),
-    },
-    b: {
-      title: "灵活应变",
-      text: "我更习惯保留弹性，根据现场变化调整。",
-      nextQuestionId: firstRoundQuestionId(1, 1),
-    },
-  }),
-  makeQuestion({
-    id: "Q_R1_STYLE_N",
-    stage: "screening",
-    question: "你更喜欢有计划、有安排，还是灵活应变？",
-    detail: "第一阶 · 目门位初筛：请按最自然、最常见的状态选择。",
-    a: {
-      title: "有计划、有安排",
-      text: "我更习惯提前安排，并依照计划推进。",
-      nextQuestionId: firstRoundQuestionId(4, 1),
-    },
-    b: {
-      title: "灵活应变",
-      text: "我更习惯保留弹性，根据现场变化调整。",
-      nextQuestionId: firstRoundQuestionId(2, 1),
-    },
-  }),
-];
+const firstRoundSelection = makeQuestion({
+  id: "Q_R1_GOD_SELECT",
+  question: "第一轮：请选择最吸引你的神祇。",
+  detail: "第一阶 · 目门位：从四位神祇中选择一位，进入对应题库。",
+  a: godSelectionOption(1, firstRoundQuestionId(1, 1)),
+  b: godSelectionOption(2, firstRoundQuestionId(2, 1)),
+  c: godSelectionOption(3, firstRoundQuestionId(3, 1)),
+  d: godSelectionOption(4, firstRoundQuestionId(4, 1)),
+});
 
 const firstRoundQuestions = ([1, 2, 3, 4] as const).flatMap(
   makeFirstRoundGodQuestions,
 );
 
 const secondRoundQuestions = ([1, 2, 3, 4] as const).flatMap((firstGodId) => [
-  ...makeSecondRoundScreening(firstGodId),
+  makeSecondRoundSelection(firstGodId),
   ...([5, 6, 7, 8] as const).flatMap((secondGodId) =>
     makeSecondRoundGodQuestions(firstGodId, secondGodId),
   ),
@@ -973,7 +915,7 @@ const finalQuestions: QuestionNode[] = [
 ];
 
 export const questions: QuestionNode[] = [
-  ...firstRoundScreening,
+  firstRoundSelection,
   ...firstRoundQuestions,
   ...secondRoundQuestions,
   ...finalQuestions,

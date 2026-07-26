@@ -18,18 +18,18 @@ import { validateDemoContent } from "./validation";
 type FirstGodId = 1 | 2 | 3 | 4;
 type SecondGodId = 5 | 6 | 7 | 8;
 
-const firstScreeningAnswers: Record<FirstGodId, readonly AnswerOptionId[]> = {
-  1: ["A", "B"],
-  2: ["B", "B"],
-  3: ["A", "A"],
-  4: ["B", "A"],
+const firstSelectionAnswers: Record<FirstGodId, AnswerOptionId> = {
+  1: "A",
+  2: "B",
+  3: "C",
+  4: "D",
 };
 
-const secondScreeningAnswers: Record<SecondGodId, readonly AnswerOptionId[]> = {
-  5: ["A", "A"],
-  6: ["B", "A"],
-  7: ["A", "B"],
-  8: ["B", "B"],
+const secondSelectionAnswers: Record<SecondGodId, AnswerOptionId> = {
+  5: "A",
+  6: "B",
+  7: "C",
+  8: "D",
 };
 
 const matchingBankAnswers: Record<
@@ -65,75 +65,89 @@ function completedPath(
   finalOptionId: "A" | "B" | "C" | "D",
 ): TestSession {
   return answerPath([
-    ...firstScreeningAnswers[firstGodId],
+    firstSelectionAnswers[firstGodId],
     ...matchingBankAnswers[firstGodId],
-    ...secondScreeningAnswers[secondGodId],
+    secondSelectionAnswers[secondGodId],
     ...matchingBankAnswers[secondGodId],
     finalOptionId,
   ]);
 }
 
 describe("revised four-corner question graph", () => {
-  it("is valid and every complete route contains 17 questions", () => {
+  it("is valid and every complete route contains 15 questions", () => {
     const report = validateDemoContent();
     const analysis = analyzeConfiguredPaths();
 
     expect(report.valid).toBe(true);
     expect(report.errors).toHaveLength(0);
     expect(analysis.incompletePaths).toHaveLength(0);
-    expect(analysis.shortestPathLength).toBe(17);
-    expect(analysis.longestPathLength).toBe(17);
-    expect(testConfig.minimumPathLength).toBe(17);
-    expect(testConfig.maximumPathLength).toBe(17);
+    expect(analysis.shortestPathLength).toBe(15);
+    expect(analysis.longestPathLength).toBe(15);
+    expect(testConfig.minimumPathLength).toBe(15);
+    expect(testConfig.maximumPathLength).toBe(15);
   });
 
-  it("uses the supplied first-round screening questions", () => {
-    expect(getQuestionById("Q_START")?.shortQuestion).toBe(
-      "你更关注事物的实际细节，还是抽象概念？",
+  it("starts both rounds with a direct four-god selection", () => {
+    const firstSelection = getQuestionById("Q_R1_GOD_SELECT");
+    expect(firstSelection?.shortQuestion).toBe(
+      "第一轮：请选择最吸引你的神祇。",
     );
-    expect(getQuestionById("Q_START")?.options.A.nextQuestionId).toBe(
+    expect(firstSelection?.options.A.title).toBe("现世主宰");
+    expect(firstSelection?.options.A.nextQuestionId).toBe("Q_R1_G1_1");
+    expect(firstSelection?.options.B.title).toBe("异界星君");
+    expect(firstSelection?.options.B.nextQuestionId).toBe("Q_R1_G2_1");
+    expect(firstSelection?.options.C?.title).toBe("太史文官");
+    expect(firstSelection?.options.C?.nextQuestionId).toBe("Q_R1_G3_1");
+    expect(firstSelection?.options.D?.title).toBe("太虚灵官");
+    expect(firstSelection?.options.D?.nextQuestionId).toBe("Q_R1_G4_1");
+
+    const secondSelection = getQuestionById("Q_R2_GOD_SELECT_F1");
+    expect(secondSelection?.options.A.title).toBe("紫薇大帝");
+    expect(secondSelection?.options.A.nextQuestionId).toBe("Q_R2_F1_G5_1");
+    expect(secondSelection?.options.B.title).toBe("闻苦天尊");
+    expect(secondSelection?.options.B.nextQuestionId).toBe("Q_R2_F1_G6_1");
+    expect(secondSelection?.options.C?.title).toBe("空悟道人");
+    expect(secondSelection?.options.C?.nextQuestionId).toBe("Q_R2_F1_G7_1");
+    expect(secondSelection?.options.D?.title).toBe("逍遥散人");
+    expect(secondSelection?.options.D?.nextQuestionId).toBe("Q_R2_F1_G8_1");
+
+    [
+      "Q_START",
       "Q_R1_STYLE_S",
-    );
-    expect(getQuestionById("Q_R1_STYLE_S")?.options.A.nextQuestionId).toBe(
-      "Q_R1_G3_1",
-    );
-    expect(getQuestionById("Q_R1_STYLE_S")?.options.B.nextQuestionId).toBe(
-      "Q_R1_G1_1",
-    );
-    expect(getQuestionById("Q_R1_STYLE_N")?.options.A.nextQuestionId).toBe(
-      "Q_R1_G4_1",
-    );
-    expect(getQuestionById("Q_R1_STYLE_N")?.options.B.nextQuestionId).toBe(
-      "Q_R1_G2_1",
-    );
+      "Q_R1_STYLE_N",
+      "Q_R2_DECISION_F1",
+      "Q_R2_STYLE_T_F1",
+      "Q_R2_STYLE_F_F1",
+    ].forEach((questionId) => {
+      expect(getQuestionById(questionId)).toBeUndefined();
+    });
   });
 
   it("switches 1↔2 after questions 1–2 when either answer misses", () => {
-    const firstMisses = answerPath(["A", "B", "B", "A"]);
+    const firstMisses = answerPath(["A", "B", "A"]);
     expect(firstMisses.currentQuestionId).toBe("Q_R1_G2_3");
 
-    const secondMisses = answerPath(["A", "B", "A", "B"]);
+    const secondMisses = answerPath(["A", "A", "B"]);
     expect(secondMisses.currentQuestionId).toBe("Q_R1_G2_3");
 
-    const bothMatch = answerPath(["A", "B", "A", "A"]);
+    const bothMatch = answerPath(["A", "A", "A"]);
     expect(bothMatch.currentQuestionId).toBe("Q_R1_G1_3");
   });
 
   it("switches 1↔3 after questions 3–4 only when both answers miss", () => {
-    const bothMiss = answerPath(["A", "B", "A", "A", "B", "B"]);
+    const bothMiss = answerPath(["A", "A", "A", "B", "B"]);
     expect(bothMiss.currentQuestionId).toBe("Q_R1_G3_5");
 
-    const onlyThirdMisses = answerPath(["A", "B", "A", "A", "B", "A"]);
+    const onlyThirdMisses = answerPath(["A", "A", "A", "B", "A"]);
     expect(onlyThirdMisses.currentQuestionId).toBe("Q_R1_G1_5");
 
-    const onlyFourthMisses = answerPath(["A", "B", "A", "A", "A", "B"]);
+    const onlyFourthMisses = answerPath(["A", "A", "A", "A", "B"]);
     expect(onlyFourthMisses.currentQuestionId).toBe("Q_R1_G1_5");
   });
 
   it("never switches after questions 5–6", () => {
     const session = answerPath([
       "A",
-      "B",
       "A",
       "A",
       "A",
@@ -141,23 +155,23 @@ describe("revised four-corner question graph", () => {
       "A",
       "B",
     ]);
-    expect(session.currentQuestionId).toBe("Q_R2_DECISION_F1");
+    expect(session.currentQuestionId).toBe("Q_R2_GOD_SELECT_F1");
   });
 
   it("applies the same early and middle switch rules in the second round", () => {
     const earlySwitch = answerPath([
-      ...firstScreeningAnswers[1],
+      firstSelectionAnswers[1],
       ...matchingBankAnswers[1],
-      ...secondScreeningAnswers[5],
+      secondSelectionAnswers[5],
       "A",
       "A",
     ]);
     expect(earlySwitch.currentQuestionId).toBe("Q_R2_F1_G6_3");
 
     const middleSwitch = answerPath([
-      ...firstScreeningAnswers[1],
+      firstSelectionAnswers[1],
       ...matchingBankAnswers[1],
-      ...secondScreeningAnswers[5],
+      secondSelectionAnswers[5],
       "B",
       "A",
       "A",
@@ -256,7 +270,7 @@ describe("revised four-corner question graph", () => {
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(17);
+      expect(session.history).toHaveLength(15);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
@@ -272,12 +286,12 @@ describe("session invariants", () => {
   });
 
   it("truncates a stale suffix after an upstream edit", () => {
-    let session = answerPath(["A", "B", "A", "A"]);
+    let session = answerPath(["A", "A", "A"]);
     session = goBackOneStep(session);
 
     const changed = answerQuestion(session, "B", { answeredAt: 9 }).session;
-    expect(changed.history).toHaveLength(4);
-    expect(changed.history[3]?.selectedOptionId).toBe("B");
+    expect(changed.history).toHaveLength(3);
+    expect(changed.history[2]?.selectedOptionId).toBe("B");
     expect(changed.currentQuestionId).toBe("Q_R1_G2_3");
   });
 
