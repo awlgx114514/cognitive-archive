@@ -316,7 +316,7 @@ const gods: Record<GodId, GodDefinition> = {
           "复盘或重温擅长领域的知识，与跨领域学习新知识，哪一个更容易让你专注、忘我并投入其中？",
         a: { title: "复盘旧知", text: "复盘或重温熟悉领域时，我更容易投入。" },
         b: { title: "跨域新知", text: "跨领域学习新知识时，我更容易投入。" },
-        correct: "A",
+        correct: "B",
       },
       {
         prompt:
