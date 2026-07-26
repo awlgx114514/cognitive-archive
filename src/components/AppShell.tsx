@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { questions } from "../data/questions";
+import {
+  getActiveDeityId,
+  getFinalDeityPair,
+} from "../data/deityVisuals";
 import { getResultTypeById } from "../data/resultTypes";
 import { getTransitionSceneById } from "../data/transitionScenes";
 import { analyzeConfiguredPaths } from "../engine/pathAnalysis";
@@ -110,6 +114,15 @@ export function AppShell() {
     (count, entry) => count + Number(entry.selectedOptionId === "U"),
     0,
   );
+  const activeDeityId =
+    currentQuestion && session.status !== "completed"
+      ? getActiveDeityId(currentQuestion.id)
+      : undefined;
+  const finalDeityPair =
+    currentQuestion?.stage === "calibration" &&
+    session.status !== "completed"
+      ? getFinalDeityPair(effectiveQuestionHistory)
+      : undefined;
 
   let content;
   if (error) {
@@ -216,7 +229,6 @@ export function AppShell() {
     content = (
       <QuestionScreen
         question={currentQuestion}
-        archiveCode={archiveCode}
         depth={displayedDepth}
         clueCount={session.history.length}
         uncertainCount={effectiveQuestionUncertainCount}
@@ -225,7 +237,6 @@ export function AppShell() {
         canGoBack={canGoBack}
         onAnswer={answer}
         onBack={back}
-        onRequestHome={requestHome}
       />
     );
   } else {
@@ -248,7 +259,10 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
-      <MysticBackground />
+      <MysticBackground
+        deityId={activeDeityId}
+        splitDeityIds={finalDeityPair}
+      />
       <header className="app-header">
         <button
           type="button"

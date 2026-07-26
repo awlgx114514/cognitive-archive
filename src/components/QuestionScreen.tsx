@@ -1,4 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  deityVisuals,
+  getSelectionDeityIds,
+} from "../data/deityVisuals";
 import { testConfig } from "../data/testConfig";
 import type {
   AnswerOption,
@@ -11,7 +15,6 @@ import UncertainButton from "./UncertainButton";
 
 export type QuestionScreenProps = {
   question: QuestionNode;
-  archiveCode: string;
   depth: number;
   clueCount: number;
   uncertainCount: number;
@@ -20,7 +23,6 @@ export type QuestionScreenProps = {
   canGoBack?: boolean;
   onAnswer: (optionId: AnswerOptionId) => void;
   onBack: () => void;
-  onRequestHome?: () => void;
 };
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -35,7 +37,6 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 export function QuestionScreen({
   question,
-  archiveCode,
   depth,
   clueCount,
   uncertainCount,
@@ -44,7 +45,6 @@ export function QuestionScreen({
   canGoBack = false,
   onAnswer,
   onBack,
-  onRequestHome,
 }: QuestionScreenProps) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const revealDelayMs = Math.max(0, question.optionRevealDelayMs ?? 0);
@@ -67,6 +67,9 @@ export function QuestionScreen({
     () => formalOptions.map((option) => option.id),
     [formalOptions],
   );
+  const selectionDeityIds = getSelectionDeityIds(question.id);
+  const isDeitySelection = Boolean(selectionDeityIds);
+  const isCalibration = question.stage === "calibration";
   const uncertainRemaining = Math.max(
     0,
     testConfig.maxUncertainSelections - uncertainCount,
@@ -157,21 +160,11 @@ export function QuestionScreen({
   ]);
 
   return (
-    <section className="question-screen" aria-labelledby="question-title">
+    <section
+      className={`question-screen${isDeitySelection ? " question-screen--deity-selection" : ""}${isCalibration ? " question-screen--calibration" : ""}`}
+      aria-labelledby="question-title"
+    >
       <div className="question-panel">
-        <header className="question-meta">
-          <button
-            type="button"
-            className="archive-id-button"
-            onClick={onRequestHome}
-            disabled={!onRequestHome || disabled}
-            aria-label="返回认知之门入口"
-          >
-            档案编号 {archiveCode}
-          </button>
-          <span className="question-trace">TRACE / {question.traceCode}</span>
-        </header>
-
         <ProgressIndicator
           depth={depth}
           clueCount={clueCount}
@@ -179,11 +172,6 @@ export function QuestionScreen({
         />
 
         <div className="question-copy">
-          <p className="question-eyebrow">
-            {optionsRevealed
-              ? "请选择更接近当下真实状态的一侧"
-              : "先停留在问题里，记录你的第一反应"}
-          </p>
           <h1
             ref={titleRef}
             className="question-title"
@@ -192,22 +180,31 @@ export function QuestionScreen({
           >
             {question.shortQuestion ?? question.question}
           </h1>
-          {question.shortQuestion ? (
-            <p className="question-detail">{question.question}</p>
-          ) : null}
         </div>
 
         {optionsRevealed ? (
-          <div className="answers-grid" aria-label="答案选项">
-            {formalOptions.map((option) => (
-              <AnswerCard
-                key={option.id}
-                option={option}
-                selected={selectedOptionId === option.id}
-                disabled={disabled}
-                onSelect={onAnswer}
-              />
-            ))}
+          <div
+            className={`answers-grid${isDeitySelection ? " answers-grid--deity-selection" : ""}`}
+            aria-label="答案选项"
+          >
+            {formalOptions.map((option, index) => {
+              const selectionDeityId = selectionDeityIds?.[index];
+              return (
+                <AnswerCard
+                  key={option.id}
+                  option={option}
+                  imageSrc={
+                    selectionDeityId
+                      ? deityVisuals[selectionDeityId].portrait
+                      : undefined
+                  }
+                  variant={selectionDeityId ? "deity" : "default"}
+                  selected={selectedOptionId === option.id}
+                  disabled={disabled}
+                  onSelect={onAnswer}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="reflection-wait" role="status" aria-live="polite">
@@ -250,15 +247,6 @@ export function QuestionScreen({
           >
             <span aria-hidden="true">←</span> 返回上一条线索
           </button>
-          {optionsRevealed ? (
-            <p className="keyboard-hint" aria-hidden="true">
-              键盘快捷键 {formalOptionIds.join(" / ")}
-              {formalOptions.length ? ` · ${formalOptions.map((_, index) => index + 1).join(" / ")}` : ""}
-              {canUseUncertain ? " / U" : ""}
-            </p>
-          ) : (
-            <p className="keyboard-hint" aria-hidden="true">正在记录第一反应</p>
-          )}
         </footer>
       </div>
     </section>
