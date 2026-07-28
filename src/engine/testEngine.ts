@@ -3,6 +3,7 @@ import {
   testConfig as demoTestConfig,
   UNCERTAIN_LIMIT_MESSAGE,
 } from "../data/testConfig";
+import { resolveDynamicRoute } from "./deityScoring";
 import type {
   AnswerAvailability,
   AnswerOption,
@@ -156,6 +157,18 @@ export function getAvailableOptionIds(
   return getAvailableOptions(question, history, config).map((option) => option.id);
 }
 
+export function resolveNextQuestionId(
+  question: QuestionNode,
+  option: AnswerOption,
+  history: readonly HistoryEntry[],
+): string | undefined {
+  if (option.terminal) return undefined;
+  if (question.dynamicRoute) {
+    return resolveDynamicRoute(question.dynamicRoute, history, question.id);
+  }
+  return option.nextQuestionId;
+}
+
 /** Returns history before this question; changing it invalidates every later clue. */
 export function truncateHistoryAtQuestion(
   history: readonly HistoryEntry[],
@@ -220,13 +233,13 @@ export function answerQuestion(
       `题目 ${question.id} 不存在选项 ${optionId}。`,
     );
   }
-  if (option.terminal && option.nextQuestionId) {
+  if (option.terminal && (option.nextQuestionId || question.dynamicRoute)) {
     throw new TestEngineError(
       "TERMINAL_NEXT_CONFLICT",
       `题目 ${question.id} 的终止选项不能同时配置下一节点。`,
     );
   }
-  if (!option.terminal && !option.nextQuestionId) {
+  if (!option.terminal && !option.nextQuestionId && !question.dynamicRoute) {
     throw new TestEngineError(
       "MISSING_NEXT_QUESTION",
       `题目 ${question.id} 的选项 ${optionId} 缺少下一节点。`,
@@ -246,16 +259,30 @@ export function answerQuestion(
     session.history,
     question.id,
   );
-  const historyEntry: HistoryEntry = {
+  const unresolvedHistoryEntry: HistoryEntry = {
     questionId: question.id,
     selectedOptionId: optionId,
-    nextQuestionId: option.nextQuestionId,
     transitionSceneId: question.transitionSceneId,
     answeredAt,
   };
+  const unresolvedHistory = [...retainedHistory, unresolvedHistoryEntry];
+  const nextQuestionId = resolveNextQuestionId(
+    question,
+    option,
+    unresolvedHistory,
+  );
+  if (nextQuestionId && !questionMap.has(nextQuestionId)) {
+    throw new TestEngineError(
+      "MISSING_NEXT_QUESTION",
+      `下一节点不存在：${nextQuestionId}`,
+    );
+  }
+  const historyEntry: HistoryEntry = {
+    ...unresolvedHistoryEntry,
+    nextQuestionId,
+  };
   const history = [...retainedHistory, historyEntry];
   const terminal = option.terminal === true;
-  const nextQuestionId = option.nextQuestionId;
   const nextSession: TestSession = {
     ...session,
     version: config.storageVersion,
@@ -389,15 +416,23 @@ export function restoreTestSession(
 
   const questionMap = createQuestionMap(questions);
   if (!questionMap.has(value.currentQuestionId)) return undefined;
-  if (!value.history.every((entry) => {
+  if (!value.history.every((entry, index) => {
     if (!entry || typeof entry !== "object") return false;
     const question = questionMap.get(entry.questionId);
     const option = question?.options[entry.selectedOptionId];
+    const expectedNextQuestionId =
+      question && option
+        ? resolveNextQuestionId(
+            question,
+            option,
+            value.history.slice(0, index + 1),
+          )
+        : undefined;
     return Boolean(
       question &&
         option &&
         entry.transitionSceneId === question.transitionSceneId &&
-        entry.nextQuestionId === option.nextQuestionId &&
+        entry.nextQuestionId === expectedNextQuestionId &&
         typeof entry.answeredAt === "number",
     );
   })) {

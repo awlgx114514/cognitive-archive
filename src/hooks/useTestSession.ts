@@ -4,6 +4,7 @@ import {
   TEST_STORAGE_KEY,
   testConfig,
 } from "../data/testConfig";
+import { getBlessingRound } from "../engine/deityScoring";
 import { calculateResult } from "../engine/resultResolver";
 import {
   answerQuestion,
@@ -41,6 +42,7 @@ export type UseTestSessionValue = {
   back: () => void;
   reset: () => void;
   complete: () => void;
+  continueAfterBlessing: () => void;
   goToQuestion: (questionId: string) => void;
   clearError: () => void;
 };
@@ -76,9 +78,14 @@ function readInitialSession(): TestSession {
       return fallback;
     }
 
-    // A refresh during a short transition resumes at its already-recorded target.
+    const lastAnsweredQuestionId = restored.history.at(-1)?.questionId;
+    // Ordinary short transitions resume immediately. Round blessings remain
+    // visible after refresh until the user continues.
     const normalized =
-      restored.status === "transitioning" ? finishTransition(restored) : restored;
+      restored.status === "transitioning" &&
+      !getBlessingRound(lastAnsweredQuestionId)
+        ? finishTransition(restored)
+        : restored;
     if (normalized !== restored) saveStoredSession(normalized);
     return normalized;
   } catch (error) {
@@ -151,10 +158,10 @@ export function useTestSession(): UseTestSessionValue {
           config: testConfig,
         });
 
-        // The static demo advances immediately. `finishTransition` keeps this
-        // compatible with the engine's legacy "transitioning" state while
-        // terminal answers remain completed.
-        commitSession(finishTransition(transition.session));
+        const nextSession = question.dynamicRoute
+          ? transition.session
+          : finishTransition(transition.session);
+        commitSession(nextSession);
         setError(null);
         submissionLockedRef.current = false;
         return true;
@@ -198,6 +205,14 @@ export function useTestSession(): UseTestSessionValue {
     submissionLockedRef.current = false;
     setError(null);
     commitSession(next);
+  }, [commitSession]);
+
+  const continueAfterBlessing = useCallback(() => {
+    const current = sessionRef.current;
+    if (current.status !== "transitioning") return;
+    submissionLockedRef.current = false;
+    setError(null);
+    commitSession(finishTransition(current));
   }, [commitSession]);
 
   const goToQuestion = useCallback(
@@ -257,6 +272,7 @@ export function useTestSession(): UseTestSessionValue {
     back,
     reset,
     complete,
+    continueAfterBlessing,
     goToQuestion,
     clearError: () => setError(null),
   };

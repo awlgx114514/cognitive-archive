@@ -3,75 +3,83 @@ import { getQuestionById, questions } from "../data/questions";
 import { testConfig } from "../data/testConfig";
 import type { AnswerOptionId, TestSession } from "../types/test";
 import {
+  calculateRoundScores,
+  finalGroupForDeities,
+  resolveRoundWinner,
+  scoreTargetForAnswer,
+} from "./deityScoring";
+import {
   answerQuestion,
   countUncertainSelections,
   createTestSession,
   finishTransition,
   getAnswerAvailability,
   goBackOneStep,
+  restoreTestSession,
   startTestSession,
 } from "./testEngine";
 import { analyzeConfiguredPaths } from "./pathAnalysis";
 import { calculateResult } from "./resultResolver";
 import { validateDemoContent } from "./validation";
 
-type FirstGodId = 1 | 2 | 3 | 4;
-type SecondGodId = 5 | 6 | 7 | 8;
+type FirstDeityId = 1 | 2 | 3 | 4;
+type SecondDeityId = 5 | 6 | 7 | 8;
 
-const firstSelectionAnswers: Record<FirstGodId, AnswerOptionId> = {
+const firstSelectionAnswers: Record<FirstDeityId, AnswerOptionId> = {
   1: "A",
   2: "B",
   3: "C",
   4: "D",
 };
 
-const secondSelectionAnswers: Record<SecondGodId, AnswerOptionId> = {
+const secondSelectionAnswers: Record<SecondDeityId, AnswerOptionId> = {
   5: "A",
   6: "B",
   7: "C",
   8: "D",
 };
 
-const matchingBankAnswers: Record<
-  FirstGodId | SecondGodId,
+const firstWinnerAnswers: Record<
+  FirstDeityId,
   readonly AnswerOptionId[]
 > = {
-  // These are the options shown in bold in the supplied Word question bank.
-  1: ["A", "A", "A", "A", "B", "A"],
-  2: ["B", "B", "A", "B", "A", "A"],
-  3: ["A", "B", "B", "B", "B", "B"],
-  4: ["B", "A", "B", "A", "A", "B"],
-  5: ["B", "A", "B", "A", "B", "B"],
-  6: ["A", "B", "A", "A", "A", "A"],
-  7: ["A", "A", "A", "B", "B", "B"],
-  8: ["B", "B", "B", "B", "B", "A"],
+  1: ["A", "A", "A", "A", "A", "A", "A", "A"],
+  2: ["B", "A", "B", "A", "B", "A", "B", "A"],
+  3: ["A", "A", "A", "A", "B", "A", "B", "A"],
+  4: ["A", "B", "A", "B", "A", "B", "A", "B"],
 };
 
-const earlyPairs = {
-  1: 2,
-  2: 1,
-  3: 4,
-  4: 3,
-  5: 6,
-  6: 5,
-  7: 8,
-  8: 7,
-} as const;
+const secondWinnerAnswers: Record<
+  SecondDeityId,
+  readonly AnswerOptionId[]
+> = {
+  5: ["A", "A", "A", "A", "A", "A", "A", "A"],
+  6: ["B", "A", "B", "A", "B", "A", "B", "A"],
+  7: ["A", "A", "A", "A", "B", "A", "B", "A"],
+  8: ["A", "B", "A", "B", "A", "B", "A", "B"],
+};
 
-const middlePairs = {
-  1: 3,
-  2: 4,
-  3: 1,
-  4: 2,
-  5: 7,
-  6: 8,
-  7: 5,
-  8: 6,
-} as const;
+const firstScoreTargets = [
+  [1, 2],
+  [3, 4],
+  [1, 2],
+  [3, 4],
+  [1, 3],
+  [2, 4],
+  [1, 3],
+  [2, 4],
+] as const;
 
-function opposite(optionId: AnswerOptionId): AnswerOptionId {
-  return optionId === "A" ? "B" : "A";
-}
+const secondScoreTargets = [
+  [5, 6],
+  [7, 8],
+  [5, 6],
+  [7, 8],
+  [5, 7],
+  [6, 8],
+  [5, 7],
+  [6, 8],
+] as const;
 
 function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
   let session = startTestSession(createTestSession(1), 1);
@@ -87,273 +95,159 @@ function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
 }
 
 function completedPath(
-  firstGodId: FirstGodId,
-  secondGodId: SecondGodId,
+  firstDeityId: FirstDeityId,
+  secondDeityId: SecondDeityId,
   finalOptionId: "A" | "B" | "C" | "D",
 ): TestSession {
   return answerPath([
-    firstSelectionAnswers[firstGodId],
-    ...matchingBankAnswers[firstGodId],
-    secondSelectionAnswers[secondGodId],
-    ...matchingBankAnswers[secondGodId],
+    firstSelectionAnswers[firstDeityId],
+    ...firstWinnerAnswers[firstDeityId],
+    secondSelectionAnswers[secondDeityId],
+    ...secondWinnerAnswers[secondDeityId],
     finalOptionId,
   ]);
 }
 
-describe("revised four-corner question graph", () => {
-  it("is valid and every complete route contains 15 questions", () => {
+describe("final three-step scoring question bank", () => {
+  it("is structurally valid and every complete route contains 19 answers", () => {
     const report = validateDemoContent();
     const analysis = analyzeConfiguredPaths();
 
     expect(report.valid).toBe(true);
     expect(report.errors).toHaveLength(0);
     expect(analysis.incompletePaths).toHaveLength(0);
-    expect(analysis.shortestPathLength).toBe(15);
-    expect(analysis.longestPathLength).toBe(15);
-    expect(testConfig.minimumPathLength).toBe(15);
-    expect(testConfig.maximumPathLength).toBe(15);
+    expect(analysis.shortestPathLength).toBe(19);
+    expect(analysis.longestPathLength).toBe(19);
+    expect(testConfig.minimumPathLength).toBe(19);
+    expect(testConfig.maximumPathLength).toBe(19);
+    expect(testConfig.storageVersion).toBe("8.0.0");
   });
 
-  it("starts both rounds with a direct four-god selection", () => {
+  it("starts each round with the requested four deity cards", () => {
     const firstSelection = getQuestionById("Q_R1_GOD_SELECT");
-    expect(firstSelection?.shortQuestion).toBe(
-      "第一轮：请选择最吸引你的神祇。",
-    );
+    expect(firstSelection?.shortQuestion).toBe("请选择你的神祇");
     expect(firstSelection?.options.A.title).toBe("现世主宰");
-    expect(firstSelection?.options.A.nextQuestionId).toBe("Q_R1_G1_1");
-    expect(firstSelection?.options.B.title).toBe("异界星君");
-    expect(firstSelection?.options.B.nextQuestionId).toBe("Q_R1_G2_1");
-    expect(firstSelection?.options.C?.title).toBe("太史文官");
-    expect(firstSelection?.options.C?.nextQuestionId).toBe("Q_R1_G3_1");
+    expect(firstSelection?.options.A.text).toBe("主宰即时体验与享乐之神");
+    expect(firstSelection?.options.A.nextQuestionId).toBe("Q_R1_SCORE_1");
     expect(firstSelection?.options.D?.title).toBe("太虚灵官");
-    expect(firstSelection?.options.D?.nextQuestionId).toBe("Q_R1_G4_1");
+    expect(firstSelection?.options.D?.nextQuestionId).toBe("Q_R1_SCORE_1");
 
-    const secondSelection = getQuestionById("Q_R2_GOD_SELECT_F1");
+    const secondSelection = getQuestionById("Q_R2_GOD_SELECT_F3");
     expect(secondSelection?.options.A.title).toBe("紫薇大帝");
-    expect(secondSelection?.options.A.nextQuestionId).toBe("Q_R2_F1_G5_1");
-    expect(secondSelection?.options.B.title).toBe("闻苦天尊");
-    expect(secondSelection?.options.B.nextQuestionId).toBe("Q_R2_F1_G6_1");
-    expect(secondSelection?.options.C?.title).toBe("空悟道人");
-    expect(secondSelection?.options.C?.nextQuestionId).toBe("Q_R2_F1_G7_1");
+    expect(secondSelection?.options.A.nextQuestionId).toBe(
+      "Q_R2_F3_SCORE_1",
+    );
     expect(secondSelection?.options.D?.title).toBe("逍遥散人");
-    expect(secondSelection?.options.D?.nextQuestionId).toBe("Q_R2_F1_G8_1");
+    expect(secondSelection?.options.D?.nextQuestionId).toBe(
+      "Q_R2_F3_SCORE_1",
+    );
+  });
 
-    [
-      "Q_START",
-      "Q_R1_STYLE_S",
-      "Q_R1_STYLE_N",
-      "Q_R2_DECISION_F1",
-      "Q_R2_STYLE_T_F1",
-      "Q_R2_STYLE_F_F1",
-    ].forEach((questionId) => {
-      expect(getQuestionById(questionId)).toBeUndefined();
+  it("contains the eight final校对 questions in each round", () => {
+    expect(getQuestionById("Q_R1_SCORE_1")?.options.A.title).toBe("身体舒适");
+    expect(getQuestionById("Q_R1_SCORE_8")?.options.B.title).toBe(
+      "结构完整、确定的结局",
+    );
+    expect(getQuestionById("Q_R2_F1_SCORE_1")?.options.A.title).toBe(
+      "解决问题",
+    );
+    expect(getQuestionById("Q_R2_F4_SCORE_8")?.options.B.title).toBe(
+      "感觉更好",
+    );
+    expect(getQuestionById("Q_R1_SCORE_1")?.options.A.text).toBe("");
+  });
+
+  it("uses the exact first-round score mapping", () => {
+    firstScoreTargets.forEach(([aTarget, bTarget], index) => {
+      expect(scoreTargetForAnswer(1, index + 1, "A")).toBe(aTarget);
+      expect(scoreTargetForAnswer(1, index + 1, "B")).toBe(bTarget);
     });
   });
 
-  it("switches 1↔2 after questions 1–2 when either answer misses", () => {
-    const firstMisses = answerPath(["A", "B", "A"]);
-    expect(firstMisses.currentQuestionId).toBe("Q_R1_G2_3");
+  it("uses the exact second-round score mapping", () => {
+    secondScoreTargets.forEach(([aTarget, bTarget], index) => {
+      expect(scoreTargetForAnswer(2, index + 1, "A")).toBe(aTarget);
+      expect(scoreTargetForAnswer(2, index + 1, "B")).toBe(bTarget);
+    });
+  });
 
-    const secondMisses = answerPath(["A", "A", "B"]);
-    expect(secondMisses.currentQuestionId).toBe("Q_R1_G2_3");
+  it("counts the initial deity selection as one point", () => {
+    const session = answerPath(["D"]);
+    const scores = calculateRoundScores(session.history, 1);
 
-    const bothMatch = answerPath(["A", "A", "A"]);
-    expect(bothMatch.currentQuestionId).toBe("Q_R1_G1_3");
+    expect(scores[1]).toBe(0);
+    expect(scores[2]).toBe(0);
+    expect(scores[3]).toBe(0);
+    expect(scores[4]).toBe(1);
   });
 
   it.each([1, 2, 3, 4] as const)(
-    "keeps first-round deity %s after both bold answers in questions 1–2",
-    (godId) => {
-      const [firstAnswer, secondAnswer] = matchingBankAnswers[godId];
+    "routes first-round winner %s to its matching second selection",
+    (deityId) => {
       const session = answerPath([
-        firstSelectionAnswers[godId],
-        firstAnswer,
-        secondAnswer,
+        firstSelectionAnswers[deityId],
+        ...firstWinnerAnswers[deityId],
       ]);
 
-      expect(session.currentQuestionId).toBe(`Q_R1_G${godId}_3`);
+      expect(resolveRoundWinner(session.history, 1).winnerId).toBe(deityId);
+      expect(session.currentQuestionId).toBe(`Q_R2_GOD_SELECT_F${deityId}`);
     },
   );
 
-  it.each([1, 2, 3, 4] as const)(
-    "switches first-round deity %s after either question 1–2 answer misses",
-    (godId) => {
-      const [firstAnswer, secondAnswer] = matchingBankAnswers[godId];
-      const switchedGodId = earlyPairs[godId];
-
-      const firstMiss = answerPath([
-        firstSelectionAnswers[godId],
-        opposite(firstAnswer),
-        secondAnswer,
-      ]);
-      const secondMiss = answerPath([
-        firstSelectionAnswers[godId],
-        firstAnswer,
-        opposite(secondAnswer),
-      ]);
-
-      expect(firstMiss.currentQuestionId).toBe(`Q_R1_G${switchedGodId}_3`);
-      expect(secondMiss.currentQuestionId).toBe(`Q_R1_G${switchedGodId}_3`);
-    },
-  );
-
-  it("switches 1↔3 after questions 3–4 only when both answers miss", () => {
-    const bothMiss = answerPath(["A", "A", "A", "B", "B"]);
-    expect(bothMiss.currentQuestionId).toBe("Q_R1_G3_5");
-
-    const onlyThirdMisses = answerPath(["A", "A", "A", "B", "A"]);
-    expect(onlyThirdMisses.currentQuestionId).toBe("Q_R1_G1_5");
-
-    const onlyFourthMisses = answerPath(["A", "A", "A", "A", "B"]);
-    expect(onlyFourthMisses.currentQuestionId).toBe("Q_R1_G1_5");
-  });
-
-  it.each([1, 2, 3, 4] as const)(
-    "keeps first-round deity %s after both bold answers in questions 3–4",
-    (godId) => {
-      const [first, second, third, fourth] = matchingBankAnswers[godId];
-      const session = answerPath([
-        firstSelectionAnswers[godId],
-        first,
-        second,
-        third,
-        fourth,
-      ]);
-
-      expect(session.currentQuestionId).toBe(`Q_R1_G${godId}_5`);
-    },
-  );
-
-  it.each([1, 2, 3, 4] as const)(
-    "switches first-round deity %s only when questions 3–4 both miss",
-    (godId) => {
-      const [first, second, third, fourth] = matchingBankAnswers[godId];
-      const session = answerPath([
-        firstSelectionAnswers[godId],
-        first,
-        second,
-        opposite(third),
-        opposite(fourth),
-      ]);
-
-      expect(session.currentQuestionId).toBe(
-        `Q_R1_G${middlePairs[godId]}_5`,
-      );
-    },
-  );
-
-  it("never switches after questions 5–6", () => {
+  it("keeps the source selection as the tie-break when it shares first place", () => {
     const session = answerPath([
       "A",
       "A",
-      "A",
-      "A",
+      "B",
+      "B",
+      "B",
       "A",
       "A",
       "B",
+      "A",
     ]);
-    expect(session.currentQuestionId).toBe("Q_R2_GOD_SELECT_F1");
+    const resolution = resolveRoundWinner(session.history, 1);
+
+    expect(resolution.scores[1]).toBe(3);
+    expect(resolution.scores[2]).toBe(3);
+    expect(resolution.tiedWinnerIds).toEqual([1, 2]);
+    expect(resolution.winnerId).toBe(1);
+    expect(resolution.tieBreakUsed).toBe(true);
   });
 
-  it("applies the same early and middle switch rules in the second round", () => {
-    const earlySwitch = answerPath([
-      firstSelectionAnswers[1],
-      ...matchingBankAnswers[1],
-      secondSelectionAnswers[5],
-      "A",
-      "A",
-    ]);
-    expect(earlySwitch.currentQuestionId).toBe("Q_R2_F1_G6_3");
+  it.each([
+    [1, 5, 1],
+    [1, 6, 2],
+    [1, 7, 2],
+    [1, 8, 1],
+    [2, 5, 3],
+    [2, 6, 4],
+    [2, 7, 4],
+    [2, 8, 3],
+    [3, 5, 3],
+    [3, 6, 4],
+    [3, 7, 4],
+    [3, 8, 3],
+    [4, 5, 1],
+    [4, 6, 2],
+    [4, 7, 2],
+    [4, 8, 1],
+  ] as const)(
+    "maps deity pair %s%s to final group %s",
+    (firstDeityId, secondDeityId, expectedGroup) => {
+      expect(finalGroupForDeities(firstDeityId, secondDeityId)).toBe(
+        expectedGroup,
+      );
 
-    const middleSwitch = answerPath([
-      firstSelectionAnswers[1],
-      ...matchingBankAnswers[1],
-      secondSelectionAnswers[5],
-      "B",
-      "A",
-      "A",
-      "B",
-    ]);
-    expect(middleSwitch.currentQuestionId).toBe("Q_R2_F1_G7_5");
-  });
-
-  it.each([5, 6, 7, 8] as const)(
-    "keeps second-round deity %s after all bold answers in questions 1–4",
-    (godId) => {
-      const [first, second, third, fourth] = matchingBankAnswers[godId];
       const session = answerPath([
-        firstSelectionAnswers[1],
-        ...matchingBankAnswers[1],
-        secondSelectionAnswers[godId],
-        first,
-        second,
-        third,
-        fourth,
+        firstSelectionAnswers[firstDeityId],
+        ...firstWinnerAnswers[firstDeityId],
+        secondSelectionAnswers[secondDeityId],
+        ...secondWinnerAnswers[secondDeityId],
       ]);
-
-      expect(session.currentQuestionId).toBe(`Q_R2_F1_G${godId}_5`);
-    },
-  );
-
-  it.each([
-    ["Q_R1_G1_2_C", "B", "Q_R1_G2_3"],
-    ["Q_R1_G2_2_C", "A", "Q_R1_G1_3"],
-    ["Q_R1_G3_2_C", "A", "Q_R1_G4_3"],
-    ["Q_R1_G4_2_C", "B", "Q_R1_G3_3"],
-    ["Q_R2_F1_G5_2_C", "B", "Q_R2_F1_G6_3"],
-    ["Q_R2_F1_G6_2_C", "A", "Q_R2_F1_G5_3"],
-    ["Q_R2_F1_G7_2_C", "B", "Q_R2_F1_G8_3"],
-    ["Q_R2_F1_G8_2_C", "A", "Q_R2_F1_G7_3"],
-  ] as const)(
-    "uses the required early pair at %s",
-    (questionId, wrongOptionId, expectedNextId) => {
-      expect(
-        getQuestionById(questionId)?.options[wrongOptionId].nextQuestionId,
-      ).toBe(expectedNextId);
-    },
-  );
-
-  it.each([
-    ["Q_R1_G1_4_W", "B", "Q_R1_G3_5"],
-    ["Q_R1_G2_4_W", "A", "Q_R1_G4_5"],
-    ["Q_R1_G3_4_W", "A", "Q_R1_G1_5"],
-    ["Q_R1_G4_4_W", "B", "Q_R1_G2_5"],
-    ["Q_R2_F1_G5_4_W", "B", "Q_R2_F1_G7_5"],
-    ["Q_R2_F1_G6_4_W", "B", "Q_R2_F1_G8_5"],
-    ["Q_R2_F1_G7_4_W", "A", "Q_R2_F1_G5_5"],
-    ["Q_R2_F1_G8_4_W", "A", "Q_R2_F1_G6_5"],
-  ] as const)(
-    "uses the required middle pair at %s",
-    (questionId, wrongOptionId, expectedNextId) => {
-      expect(
-        getQuestionById(questionId)?.options[wrongOptionId].nextQuestionId,
-      ).toBe(expectedNextId);
-    },
-  );
-
-  it.each([
-    [1, 5, "ESFP"],
-    [1, 6, "ESTP"],
-    [1, 7, "ESTP"],
-    [1, 8, "ESFP"],
-    [2, 5, "ENFP"],
-    [2, 6, "ENTP"],
-    [2, 7, "ENTP"],
-    [2, 8, "ENFP"],
-    [3, 5, "ENFP"],
-    [3, 6, "ENTP"],
-    [3, 7, "ENTP"],
-    [3, 8, "ENFP"],
-    [4, 5, "ESFP"],
-    [4, 6, "ESTP"],
-    [4, 7, "ESTP"],
-    [4, 8, "ESFP"],
-  ] as const)(
-    "maps deity pair %s%s to the correct final group",
-    (firstGodId, secondGodId, expectedTypeForOptionA) => {
-      const session = completedPath(firstGodId, secondGodId, "A");
-      const result = calculateResult(session.history, questions);
-      expect(result.resultTypeId).toBe(expectedTypeForOptionA);
+      expect(session.currentQuestionId).toBe(
+        `Q_FINAL_GROUP_${expectedGroup}`,
+      );
     },
   );
 
@@ -375,17 +269,17 @@ describe("revised four-corner question graph", () => {
     ["ISFJ", 2, 6, "C"],
     ["INTP", 2, 6, "D"],
   ] as const)(
-    "can complete a %s route",
-    (expectedType, firstGodId, secondGodId, finalOptionId) => {
+    "can complete the %s result",
+    (expectedType, firstDeityId, secondDeityId, finalOptionId) => {
       const session = completedPath(
-        firstGodId,
-        secondGodId,
+        firstDeityId,
+        secondDeityId,
         finalOptionId,
       );
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(15);
+      expect(session.history).toHaveLength(19);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
@@ -393,43 +287,36 @@ describe("revised four-corner question graph", () => {
 });
 
 describe("session invariants", () => {
-  it("allows four final choices while keeping uncertain unavailable", () => {
+  it("keeps uncertain unavailable throughout the new bank", () => {
     const finalQuestion = getQuestionById("Q_FINAL_GROUP_1")!;
     expect(getAnswerAvailability(finalQuestion, "D", []).allowed).toBe(true);
     expect(getAnswerAvailability(finalQuestion, "U", []).allowed).toBe(false);
     expect(questions.some((question) => question.options.U)).toBe(false);
+    expect(testConfig.maxUncertainSelections).toBe(0);
   });
 
-  it("truncates a stale suffix after an upstream edit", () => {
+  it("truncates stale score history after an upstream edit", () => {
     let session = answerPath(["A", "A", "A"]);
     session = goBackOneStep(session);
 
     const changed = answerQuestion(session, "B", { answeredAt: 9 }).session;
     expect(changed.history).toHaveLength(3);
     expect(changed.history[2]?.selectedOptionId).toBe("B");
-    expect(changed.currentQuestionId).toBe("Q_R1_G2_3");
+    expect(changed.currentQuestionId).toBe("Q_R1_SCORE_3");
   });
 
-  it("does not generate a result when terminal calibration data is missing", () => {
-    const session = completedPath(1, 5, "A");
-    const brokenQuestions = questions.map((question) =>
-      question.id === "Q_FINAL_GROUP_1"
-        ? {
-            ...question,
-            options: {
-              ...question.options,
-              A: { ...question.options.A, calibrationTypeId: undefined },
-            },
-          }
-        : question,
+  it("restores a completed dynamically routed session", () => {
+    const completed = completedPath(4, 8, "C");
+    const restored = restoreTestSession(
+      JSON.parse(JSON.stringify(completed)),
+      questions,
+      testConfig,
     );
 
-    expect(() => calculateResult(session.history, brokenQuestions)).toThrow(
-      "configured calibration result",
-    );
+    expect(restored).toEqual(completed);
   });
 
-  it("still derives uncertain usage from persisted history defensively", () => {
+  it("still derives uncertain usage defensively from persisted history", () => {
     const entries = Array.from({ length: 3 }, (_, index) => ({
       questionId: `Q_${index}`,
       selectedOptionId: "U" as const,

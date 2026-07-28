@@ -2,11 +2,11 @@ import type { TestConfig } from "../types/test";
 
 export const testConfig: TestConfig = {
   startQuestionId: "Q_R1_GOD_SELECT",
-  maxUncertainSelections: 3,
-  minimumPathLength: 15,
-  recommendedPathLength: 15,
-  maximumPathLength: 15,
-  storageVersion: "7.0.0",
+  maxUncertainSelections: 0,
+  minimumPathLength: 19,
+  recommendedPathLength: 19,
+  maximumPathLength: 19,
+  storageVersion: "8.0.0",
 };
 
 export const TEST_STORAGE_KEY = "cognitive-archive:test-session";

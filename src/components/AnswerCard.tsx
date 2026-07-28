@@ -43,7 +43,9 @@ export function AnswerCard({
           {option.id}
         </span>
         <span className="answer-title">{option.title}</span>
-        <span className="answer-text">{option.text}</span>
+        {option.text ? (
+          <span className="answer-text">{option.text}</span>
+        ) : null}
       </span>
     </button>
   );

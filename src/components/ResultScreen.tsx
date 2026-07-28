@@ -172,7 +172,7 @@ async function createShareCard(
   context.font = '400 21px Inter, "Microsoft YaHei", sans-serif';
   context.fillText(`档案编号 ${archiveCode}`, 78, 1393);
   context.textAlign = "right";
-  context.fillText("结果依据本次答题分支与最终校准生成", 1002, 1393);
+  context.fillText("结果依据两轮神祇积分与最终选择生成", 1002, 1393);
   context.textAlign = "left";
 
   return new Promise((resolve, reject) => {
@@ -247,8 +247,8 @@ export function ResultScreen({
           <h2>本次路径摘要</h2>
           <dl>
             <div>
-              <dt>校准状态</dt>
-              <dd>{result.calibrationMatched === true ? "已通过" : "未记录"}</dd>
+              <dt>神祇定位</dt>
+              <dd>{result.calibrationMatched === true ? "已完成" : "未记录"}</dd>
             </div>
             <div>
               <dt>记录线索</dt>
@@ -256,7 +256,7 @@ export function ResultScreen({
             </div>
             <div>
               <dt>结果依据</dt>
-              <dd>答题分支与最终校准</dd>
+              <dd>两轮神祇积分与最终选择</dd>
             </div>
           </dl>
         </section>

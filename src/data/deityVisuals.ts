@@ -1,6 +1,11 @@
+import {
+  getSelectedDeityId,
+  resolveRoundWinner,
+} from "../engine/deityScoring";
 import type { HistoryEntry } from "../types/test";
+import type { DeityId } from "./deities";
 
-export type DeityId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type { DeityId } from "./deities";
 
 export type DeityVisual = {
   id: DeityId;
@@ -68,15 +73,14 @@ export function getSelectionDeityIds(
 
 export function getActiveDeityId(
   questionId: string,
+  history: readonly HistoryEntry[] = [],
 ): DeityId | undefined {
-  const firstRoundMatch = /^Q_R1_G([1-4])_/.exec(questionId);
-  if (firstRoundMatch?.[1]) {
-    return Number(firstRoundMatch[1]) as DeityId;
+  if (/^Q_R1_SCORE_[1-8]$/.test(questionId)) {
+    return getSelectedDeityId(history, 1);
   }
 
-  const secondRoundMatch = /^Q_R2_F[1-4]_G([5-8])_/.exec(questionId);
-  if (secondRoundMatch?.[1]) {
-    return Number(secondRoundMatch[1]) as DeityId;
+  if (/^Q_R2_F[1-4]_SCORE_[1-8]$/.test(questionId)) {
+    return getSelectedDeityId(history, 2);
   }
 
   return undefined;
@@ -85,18 +89,12 @@ export function getActiveDeityId(
 export function getFinalDeityPair(
   history: readonly HistoryEntry[],
 ): readonly [DeityId, DeityId] | undefined {
-  for (let index = history.length - 1; index >= 0; index -= 1) {
-    const questionId = history[index]?.questionId;
-    if (!questionId) continue;
-
-    const match = /^Q_R2_F([1-4])_G([5-8])_/.exec(questionId);
-    if (match?.[1] && match[2]) {
-      return [
-        Number(match[1]) as DeityId,
-        Number(match[2]) as DeityId,
-      ];
-    }
+  if (!getSelectedDeityId(history, 1) || !getSelectedDeityId(history, 2)) {
+    return undefined;
   }
 
-  return undefined;
+  return [
+    resolveRoundWinner(history, 1).winnerId,
+    resolveRoundWinner(history, 2).winnerId,
+  ];
 }

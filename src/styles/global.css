@@ -1324,6 +1324,110 @@ button:disabled,
     #080a18;
 }
 
+/* Round blessing */
+.blessing-screen {
+  display: grid;
+  place-items: center;
+  width: min(calc(100% - 2rem), 68rem);
+  min-height: calc(100dvh - 8rem);
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4.5rem) 0;
+  animation: archive-fade-up var(--duration-slow) var(--ease-out) both;
+}
+
+.blessing-card {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.82fr) minmax(18rem, 1fr);
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1.2rem;
+  background: rgba(3, 4, 10, 0.48);
+  box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(16px);
+}
+
+.blessing-card__portrait {
+  position: relative;
+  min-height: clamp(26rem, 58vh, 40rem);
+  overflow: hidden;
+}
+
+.blessing-card__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.blessing-card__portrait-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 55%, rgba(3, 4, 10, 0.78)),
+    linear-gradient(180deg, transparent 58%, rgba(3, 4, 10, 0.52));
+}
+
+.blessing-card__copy {
+  align-self: center;
+  padding: clamp(2rem, 5vw, 4.5rem);
+}
+
+.blessing-kicker {
+  margin: 0 0 var(--space-4);
+  color: var(--gold-bright);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+}
+
+.blessing-card h1 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 7vw, 5rem);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  text-shadow: 0 4px 28px #000;
+}
+
+.blessing-description {
+  margin: var(--space-5) 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: var(--text-lg);
+  line-height: 1.8;
+}
+
+.blessing-message {
+  margin: var(--space-10) 0 var(--space-6);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.8vw, 1.8rem);
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 760px) {
+  .blessing-card {
+    grid-template-columns: 1fr;
+  }
+
+  .blessing-card__portrait {
+    min-height: 48vh;
+    max-height: 34rem;
+  }
+
+  .blessing-card__portrait-veil {
+    background: linear-gradient(180deg, transparent 45%, rgba(3, 4, 10, 0.92));
+  }
+
+  .blessing-card__copy {
+    margin-top: -3rem;
+    padding-top: 0;
+    position: relative;
+    z-index: 1;
+  }
+}
+
 /* Results */
 .result-screen {
   width: min(calc(100% - 2rem), var(--content-wide));

@@ -27,6 +27,22 @@ function structuralRoutes(question: QuestionNode): StructuralRoute[] {
     ...(question.options.D ? [question.options.D] : []),
     ...(question.options.U ? [question.options.U] : []),
   ].filter(Boolean);
+
+  if (
+    question.dynamicRoute &&
+    question.dynamicNextQuestionIds &&
+    question.dynamicNextQuestionIds.length > 0
+  ) {
+    const optionIds = options
+      .filter((option) => option.terminal !== true)
+      .map((option) => option.id);
+    return question.dynamicNextQuestionIds.map((nextQuestionId) => ({
+      optionIds: [...optionIds],
+      nextQuestionId,
+      terminal: false,
+    }));
+  }
+
   const grouped = new Map<string, StructuralRoute>();
 
   for (const option of options) {

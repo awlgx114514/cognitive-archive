@@ -44,6 +44,10 @@ export type QuestionStage =
   | "verification"
   | "calibration";
 
+export type DynamicRouteKind =
+  | "first-round-score"
+  | "second-round-score";
+
 export type QuestionNode = {
   id: string;
   traceCode: string;
@@ -58,6 +62,10 @@ export type QuestionNode = {
   stage?: QuestionStage;
   /** Links different situations that revisit the same tentative distinction. */
   consistencyGroupId?: string;
+  /** Resolves the next node from the accumulated score history. */
+  dynamicRoute?: DynamicRouteKind;
+  /** All possible destinations used by structural validation. */
+  dynamicNextQuestionIds?: string[];
   internalNote?: string;
 };
 

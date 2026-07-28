@@ -12,12 +12,7 @@ type CalibrationResolution = {
   retestReason?: string;
 };
 
-/**
- * Resolves the supplied branching tree without a points system. The terminal
- * calibration option names the intended type. For paired branches, the two
- * earlier type hints act as votes; a unique majority that conflicts with the
- * calibration is marked for retest.
- */
+/** Resolves the terminal desire choice selected after the two scored rounds. */
 export function resolveCalibrationResult(
   history: readonly HistoryEntry[],
   questions: readonly QuestionNode[],
@@ -81,7 +76,7 @@ export function resolveCalibrationResult(
   };
 }
 
-/** Resolves a result from branch clues and the terminal calibration only. */
+/** Resolves the final personality type from the selected terminal desire. */
 export function calculateResult(
   history: HistoryEntry[],
   questions: QuestionNode[],

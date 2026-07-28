@@ -6,9 +6,14 @@ import {
 } from "../data/deityVisuals";
 import { getResultTypeById } from "../data/resultTypes";
 import { getTransitionSceneById } from "../data/transitionScenes";
+import {
+  getBlessingRound,
+  resolveRoundWinner,
+} from "../engine/deityScoring";
 import { analyzeConfiguredPaths } from "../engine/pathAnalysis";
 import { validateDemoContent } from "../engine/validation";
 import { useTestSession } from "../hooks/useTestSession";
+import BlessingScreen from "./BlessingScreen";
 import ConfirmDialog from "./ConfirmDialog";
 import DevPanel from "./DevPanel";
 import HomeScreen from "./HomeScreen";
@@ -35,6 +40,7 @@ export function AppShell() {
     back,
     reset,
     complete,
+    continueAfterBlessing,
     goToQuestion,
     clearError,
   } = useTestSession();
@@ -114,10 +120,18 @@ export function AppShell() {
     (count, entry) => count + Number(entry.selectedOptionId === "U"),
     0,
   );
-  const activeDeityId =
-    currentQuestion && session.status !== "completed"
-      ? getActiveDeityId(currentQuestion.id)
+  const blessingRound =
+    session.status === "transitioning"
+      ? getBlessingRound(session.history.at(-1)?.questionId)
       : undefined;
+  const blessingResolution = blessingRound
+    ? resolveRoundWinner(session.history, blessingRound)
+    : undefined;
+  const activeDeityId =
+    blessingResolution?.winnerId ??
+    (currentQuestion && session.status !== "completed"
+      ? getActiveDeityId(currentQuestion.id, effectiveQuestionHistory)
+      : undefined);
   const finalDeityPair =
     currentQuestion?.stage === "calibration" &&
     session.status !== "completed"
@@ -225,6 +239,14 @@ export function AppShell() {
         );
       }
     }
+  } else if (blessingRound && blessingResolution) {
+    content = (
+      <BlessingScreen
+        deityId={blessingResolution.winnerId}
+        round={blessingRound}
+        onContinue={continueAfterBlessing}
+      />
+    );
   } else if (currentQuestion) {
     content = (
       <QuestionScreen

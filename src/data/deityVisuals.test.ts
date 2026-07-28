@@ -4,36 +4,49 @@ import {
   getFinalDeityPair,
   getSelectionDeityIds,
 } from "./deityVisuals";
-import type { HistoryEntry } from "../types/test";
+import type { AnswerOptionId, HistoryEntry } from "../types/test";
+
+function entry(
+  questionId: string,
+  selectedOptionId: AnswerOptionId,
+  answeredAt: number,
+): HistoryEntry {
+  return {
+    questionId,
+    selectedOptionId,
+    transitionSceneId: `scene-${questionId.toLowerCase().replaceAll("_", "-")}`,
+    answeredAt,
+  };
+}
 
 describe("deity visual routing", () => {
-  it("maps both direct-selection pages to the correct portrait sets", () => {
+  it("maps both deity-selection pages to the existing portrait sets", () => {
     expect(getSelectionDeityIds("Q_R1_GOD_SELECT")).toEqual([1, 2, 3, 4]);
     expect(getSelectionDeityIds("Q_R2_GOD_SELECT_F3")).toEqual([5, 6, 7, 8]);
   });
 
-  it("follows the active bank after a deity switch", () => {
-    expect(getActiveDeityId("Q_R1_G3_5")).toBe(3);
-    expect(getActiveDeityId("Q_R2_F3_G7_5")).toBe(7);
-    expect(getActiveDeityId("Q_R2_GOD_SELECT_F3")).toBeUndefined();
+  it("keeps the initially selected deity background during each score round", () => {
+    const history = [
+      entry("Q_R1_GOD_SELECT", "C", 1),
+      entry("Q_R2_GOD_SELECT_F3", "C", 2),
+    ];
+
+    expect(getActiveDeityId("Q_R1_SCORE_5", history)).toBe(3);
+    expect(getActiveDeityId("Q_R2_F3_SCORE_5", history)).toBe(7);
+    expect(getActiveDeityId("Q_R2_GOD_SELECT_F3", history)).toBeUndefined();
   });
 
-  it("recovers the two final deities from the routed second-round bank", () => {
+  it("derives the final split background from both scored winners", () => {
     const history: HistoryEntry[] = [
-      {
-        questionId: "Q_R1_GOD_SELECT",
-        selectedOptionId: "A",
-        nextQuestionId: "Q_R1_G1_1",
-        transitionSceneId: "scene-q-r1-god-select",
-        answeredAt: 1,
-      },
-      {
-        questionId: "Q_R2_F3_G7_6",
-        selectedOptionId: "B",
-        nextQuestionId: "Q_FINAL_GROUP_4",
-        transitionSceneId: "scene-q-r2-f3-g7-6",
-        answeredAt: 2,
-      },
+      entry("Q_R1_GOD_SELECT", "C", 1),
+      ...(["A", "A", "A", "A", "B", "A", "B", "A"] as const).map(
+        (answer, index) => entry(`Q_R1_SCORE_${index + 1}`, answer, index + 2),
+      ),
+      entry("Q_R2_GOD_SELECT_F3", "C", 10),
+      ...(["A", "A", "A", "A", "B", "A", "B", "A"] as const).map(
+        (answer, index) =>
+          entry(`Q_R2_F3_SCORE_${index + 1}`, answer, index + 11),
+      ),
     ];
 
     expect(getFinalDeityPair(history)).toEqual([3, 7]);

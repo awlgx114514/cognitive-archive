@@ -62,7 +62,7 @@ function historyForPath(
     return {
       questionId: question.id,
       selectedOptionId: optionId,
-      nextQuestionId: option.nextQuestionId,
+      nextQuestionId: step.nextQuestionId,
       transitionSceneId: question.transitionSceneId,
       answeredAt: index + 1,
     };
@@ -179,6 +179,28 @@ export function validateQuestionBank({
       });
     }
 
+    if (
+      question.dynamicRoute &&
+      (!question.dynamicNextQuestionIds ||
+        question.dynamicNextQuestionIds.length === 0)
+    ) {
+      addIssue(issues, {
+        code: "MISSING_NEXT_QUESTION",
+        message: "动态计分节点没有声明任何可能的下一节点。",
+        questionId: question.id,
+      });
+    }
+    for (const nextQuestionId of question.dynamicNextQuestionIds ?? []) {
+      if (!questionIds.has(nextQuestionId)) {
+        addIssue(issues, {
+          code: "MISSING_NEXT_QUESTION",
+          message: `动态下一节点不存在：${nextQuestionId}`,
+          questionId: question.id,
+          relatedId: nextQuestionId,
+        });
+      }
+    }
+
     const options = allRuntimeOptions(question);
     for (const [expectedOptionId, option] of options) {
       if (option.id !== expectedOptionId) {
@@ -189,7 +211,7 @@ export function validateQuestionBank({
           optionId: expectedOptionId,
         });
       }
-      if (option.terminal && option.nextQuestionId) {
+      if (option.terminal && (option.nextQuestionId || question.dynamicRoute)) {
         addIssue(issues, {
           code: "TERMINAL_NEXT_CONFLICT",
           message: "terminal 与 nextQuestionId 不能同时存在。",
@@ -205,6 +227,18 @@ export function validateQuestionBank({
           questionId: question.id,
           optionId: expectedOptionId,
           relatedId: option.nextQuestionId,
+        });
+      }
+      if (
+        !option.terminal &&
+        !option.nextQuestionId &&
+        !question.dynamicRoute
+      ) {
+        addIssue(issues, {
+          code: "MISSING_NEXT_QUESTION",
+          message: "非终点选项缺少下一节点。",
+          questionId: question.id,
+          optionId: expectedOptionId,
         });
       }
       for (const resultReference of [option.typeHintId, option.calibrationTypeId]) {
@@ -248,7 +282,10 @@ export function validateQuestionBank({
     }
     if (
       options.length === 0 ||
-      options.every(([, option]) => !option.terminal && !option.nextQuestionId)
+      (options.every(
+        ([, option]) => !option.terminal && !option.nextQuestionId,
+      ) &&
+        !question.dynamicRoute)
     ) {
       addIssue(issues, {
         code: "NO_EXIT",
