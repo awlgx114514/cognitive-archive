@@ -93,15 +93,14 @@ function deitySelectionOption(
 
 const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
   {
-    question: "你更喜欢哪一种？",
+    question: "你更喜欢？",
     a: "身体舒适",
     b: "脑嗨",
   },
   {
-    question:
-      "感到更舒适的是：重温发生过的经验和细节，还是想象虚构出的未来和意义？",
-    a: "重温经验和细节",
-    b: "想象未来和意义",
+    question: "感到更舒适的是？",
+    a: "重温发生过的经验和细节",
+    b: "想象虚构出的未来和意义",
   },
   {
     question: "哪一个更吸引你？",
@@ -109,12 +108,12 @@ const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
     b: "遥远新奇古怪的事物",
   },
   {
-    question: "学习榜样人物时，你倾向选择哪一种？",
+    question: "学习榜样人物，你倾向选择？",
     a: "身边的优秀前辈或行业标杆",
-    b: "书中只言片语皆成箴言的哲学家",
+    b: "书中的“只言片语、皆成箴言”的哲学家",
   },
   {
-    question: "你更愿意待在哪种环境？",
+    question: "你更愿待在哪种环境？",
     a: "陌生刺激的环境",
     b: "熟悉安全的环境",
   },
@@ -125,19 +124,19 @@ const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
   },
   {
     question: "哪一个更吸引你？",
-    a: "质感丰富、崭新出炉的摆件",
-    b: "质地朴素、历史沉淀的文物",
+    a: "质感丰富崭新出炉的摆件",
+    b: "质地朴素历史沉淀的文物",
   },
   {
     question: "你更喜欢哪类结局？",
     a: "引人遐想的开放式结局",
-    b: "结构完整、确定的结局",
+    b: "结构完整的确定的结局",
   },
 ];
 
 const secondRoundQuestions: readonly BinaryQuestionSeed[] = [
   {
-    question: "哪个在你心中更有分量？",
+    question: "哪个在你心中更有份量？",
     a: "解决问题",
     b: "获得他人认可",
   },
@@ -147,32 +146,32 @@ const secondRoundQuestions: readonly BinaryQuestionSeed[] = [
     b: "重要",
   },
   {
-    question: "对企业来说哪个更重要？",
+    question: "对企业来说哪个重要？",
     a: "效率与降本增效",
     b: "信誉与社会责任",
   },
   {
-    question: "你更相信哪个为人处世的原则？",
+    question: "哪个为人处世的原则令你坚守或信赖？",
     a: "利益取舍",
     b: "善恶观念",
   },
   {
-    question: "遇到问题时你习惯哪一种？",
+    question: "遇到问题你习惯？",
     a: "旁征博引",
     b: "独出己见",
   },
   {
-    question: "更令你讨厌的是哪一种？",
+    question: "更令你讨厌的是？",
     a: "自私冷漠",
     b: "虚伪做作",
   },
   {
     question: "如果意外捡到一块奇石，你会如何思考？",
-    a: "考虑如何使用，比如收藏或拍卖",
-    b: "思考它的本质、来历、危险与价值",
+    a: "考虑使用奇石，比如收藏或拍卖",
+    b: "思考本质，奇石是什么？从哪来？有没有危险或价值？",
   },
   {
-    question: "当你发现自己的爱好不被世俗或社会认同时，你会？",
+    question: "当你发现自己的爱好不被世俗或社会认同",
     a: "难免不适",
     b: "感觉更好",
   },
@@ -265,6 +264,7 @@ function terminalOption(
 
 function makeFinalQuestion(
   group: 1 | 2 | 3 | 4,
+  prompt: string,
   options: readonly [
     readonly [string, string],
     readonly [string, string],
@@ -277,8 +277,8 @@ function makeFinalQuestion(
   return {
     id,
     traceCode: `ARC-FINAL-GROUP-${group}`,
-    shortQuestion: "请选出你最深层的心理欲望，它将指引你走向主神位",
-    question: "请遵循本心选择最贴近内在驱动力的一项。",
+    shortQuestion: prompt,
+    question: prompt,
     options: {
       A: terminalOption("A", a[0], a[1]),
       B: terminalOption("B", b[0], b[1]),
@@ -299,29 +299,29 @@ const secondRoundNodes = firstRoundDeityIds.flatMap((firstWinnerId) => [
 ]);
 
 const finalQuestions: QuestionNode[] = [
-  makeFinalQuestion(1, [
-    ["体验享乐", "ESFP"],
-    ["从协调规划到完成任务", "ENTJ"],
-    ["想象预测", "INTJ"],
-    ["通过喜好和感受建立专属自己的价值体系", "ISFP"],
+  makeFinalQuestion(1, "最令你恐惧的是：", [
+    ["细菌病毒", "ESFP"],
+    ["情绪崩溃", "ENTJ"],
+    ["嘈杂噪音的环境/“恐高”（悬崖距离三四米）", "INTJ"],
+    ["工作重负/被迫强制命令他人", "ISFP"],
   ]),
-  makeFinalQuestion(2, [
-    ["体验享乐", "ESTP"],
-    ["肯定他人建立深层联结", "ENFJ"],
-    ["想象预测", "INFJ"],
-    ["通过定义概念达成深度理解", "ISTP"],
+  makeFinalQuestion(2, "最令你恐惧的是：", [
+    ["未来噩运缠身", "ESTP"],
+    ["被指责或质疑“逻辑不通”", "ENFJ"],
+    ["嘈杂噪音的环境/“恐高”（悬崖距离三四米）", "INFJ"],
+    ["高强度令人窒息的社交", "ISTP"],
   ]),
-  makeFinalQuestion(3, [
-    ["分享创意", "ENFP"],
-    ["从协调规划到完成任务", "ESTJ"],
-    ["验证复盘", "ISTJ"],
-    ["通过喜好和感受建立专属自己的价值体系", "INFP"],
+  makeFinalQuestion(3, "令你最恐惧的是：", [
+    ["机械重复的日常工作", "ENFP"],
+    ["情绪崩溃", "ESTJ"],
+    ["混乱", "ISTJ"],
+    ["工作重负/被迫强制命令他人", "INFP"],
   ]),
-  makeFinalQuestion(4, [
-    ["分享创意", "ENTP"],
-    ["肯定他人建立深层联结", "ESFJ"],
-    ["验证复盘", "ISFJ"],
-    ["通过定义概念达成深度理解", "INTP"],
+  makeFinalQuestion(4, "令你最恐惧的是：", [
+    ["机械重复的日常工作", "ENTP"],
+    ["被指责或质疑“逻辑不通”", "ESFJ"],
+    ["混乱", "ISFJ"],
+    ["高强度令人窒息的社交", "INTP"],
   ]),
 ];
 

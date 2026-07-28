@@ -143,10 +143,13 @@ describe("final three-step scoring question bank", () => {
     );
   });
 
-  it("contains the eight final校对 questions in each round", () => {
+  it("contains the exact fifth-edition questions without changing score order", () => {
     expect(getQuestionById("Q_R1_SCORE_1")?.options.A.title).toBe("身体舒适");
+    expect(getQuestionById("Q_R1_SCORE_2")?.options.A.title).toBe(
+      "重温发生过的经验和细节",
+    );
     expect(getQuestionById("Q_R1_SCORE_8")?.options.B.title).toBe(
-      "结构完整、确定的结局",
+      "结构完整的确定的结局",
     );
     expect(getQuestionById("Q_R2_F1_SCORE_1")?.options.A.title).toBe(
       "解决问题",
@@ -155,6 +158,21 @@ describe("final three-step scoring question bank", () => {
       "感觉更好",
     );
     expect(getQuestionById("Q_R1_SCORE_1")?.options.A.text).toBe("");
+    expect(getQuestionById("Q_FINAL_GROUP_1")?.shortQuestion).toBe(
+      "最令你恐惧的是：",
+    );
+    expect(getQuestionById("Q_FINAL_GROUP_1")?.options.C?.title).toBe(
+      "嘈杂噪音的环境/“恐高”（悬崖距离三四米）",
+    );
+    expect(getQuestionById("Q_FINAL_GROUP_2")?.options.B.title).toBe(
+      "被指责或质疑“逻辑不通”",
+    );
+    expect(getQuestionById("Q_FINAL_GROUP_3")?.shortQuestion).toBe(
+      "令你最恐惧的是：",
+    );
+    expect(getQuestionById("Q_FINAL_GROUP_4")?.options.D?.title).toBe(
+      "高强度令人窒息的社交",
+    );
   });
 
   it("uses the exact first-round score mapping", () => {

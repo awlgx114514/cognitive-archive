@@ -42,7 +42,7 @@ const secondSelectionTargets: Readonly<
 
 /**
  * Each tuple is [A target, B target]. It is a direct transcription of the
- * final校对版 score table supplied by the user.
+ * 第五版 score table supplied by the user.
  */
 const firstRoundScoreTargets = [
   [1, 2],
