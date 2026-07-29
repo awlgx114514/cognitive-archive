@@ -278,9 +278,14 @@ export function AppShell() {
   const currentDebugScene = currentQuestion
     ? getTransitionSceneById(currentQuestion.transitionSceneId)
     : undefined;
+  const backgroundMode = finalDeityPair
+    ? "split"
+    : activeDeityId
+      ? "deity"
+      : "default";
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell app-shell--${backgroundMode}`}>
       <MysticBackground
         deityId={activeDeityId}
         splitDeityIds={finalDeityPair}
