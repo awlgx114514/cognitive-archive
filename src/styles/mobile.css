@@ -1,0 +1,581 @@
+/*
+ * Portrait-phone refinements for the C visual theme.
+ * Variant-specific rules are scoped by the mobile layout class on the app root.
+ */
+
+@media (max-width: 42rem) {
+  .visual-theme--c.mobile-layout {
+    --header-height: 3.5rem;
+  }
+
+  .visual-theme--c.mobile-layout .app-shell {
+    min-height: 100svh;
+  }
+
+  .visual-theme--c.mobile-layout .app-header {
+    width: 100%;
+    min-height: calc(var(--header-height) + env(safe-area-inset-top));
+    padding:
+      env(safe-area-inset-top)
+      max(0.75rem, env(safe-area-inset-right))
+      0
+      max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .visual-theme--c.mobile-layout .app-brand {
+    min-height: 2.75rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+  }
+
+  .visual-theme--c.mobile-layout .app-brand::before {
+    width: 1.1rem;
+    margin-right: 0.5rem;
+  }
+
+  .visual-theme--c.mobile-layout .app-actions {
+    flex: 0 0 auto;
+    gap: 0.35rem;
+  }
+
+  .visual-theme--c.mobile-layout .app-actions button {
+    min-height: 2.75rem;
+    padding-inline: 0.45rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+  }
+
+  .visual-theme--c.mobile-layout .app-main {
+    min-height: calc(100dvh - var(--header-height) - env(safe-area-inset-top));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .visual-theme--c.mobile-layout .home-screen,
+  .visual-theme--c.mobile-layout .question-screen,
+  .visual-theme--c.mobile-layout .blessing-screen,
+  .visual-theme--c.mobile-layout .result-screen {
+    width: 100%;
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .visual-theme--c.mobile-layout .home-screen {
+    min-height: calc(100svh - var(--header-height) - env(safe-area-inset-top));
+    padding-top: clamp(1rem, 4svh, 2.25rem);
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+
+  .visual-theme--c.mobile-layout .home-hero {
+    padding: 0.5rem 0 0.75rem;
+  }
+
+  .visual-theme--c.mobile-layout .home-logo-mark {
+    width: clamp(3.25rem, 15vw, 4.5rem);
+    margin-bottom: 0.75rem;
+  }
+
+  .visual-theme--c.mobile-layout .home-kicker {
+    margin-bottom: 0.55rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+  }
+
+  .visual-theme--c.mobile-layout .home-file-number {
+    margin-bottom: 0.75rem;
+    font-size: 0.64rem;
+  }
+
+  .visual-theme--c.mobile-layout .home-title {
+    max-width: 11ch;
+    margin-bottom: 0.95rem;
+    font-size: clamp(2.2rem, 11.5vw, 3.2rem);
+    line-height: 1.08;
+  }
+
+  .visual-theme--c.mobile-layout .home-lead {
+    margin-bottom: 0.75rem;
+    font-size: clamp(1rem, 4.5vw, 1.16rem);
+    line-height: 1.62;
+  }
+
+  .visual-theme--c.mobile-layout .home-copy {
+    max-width: 30rem;
+    margin-inline: auto;
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .visual-theme--c.mobile-layout .home-copy br {
+    display: none;
+  }
+
+  .visual-theme--c.mobile-layout .home-actions {
+    width: min(100%, 24rem);
+    margin: 1.4rem auto 0;
+  }
+
+  .visual-theme--c.mobile-layout .home-actions button,
+  .visual-theme--c.mobile-layout .result-actions button,
+  .visual-theme--c.mobile-layout .confirm-actions button,
+  .visual-theme--c.mobile-layout .blessing-card button {
+    min-height: 2.75rem;
+  }
+
+  .visual-theme--c.mobile-layout .home-disclaimer {
+    margin-top: 1.5rem;
+    font-size: 0.66rem;
+    line-height: 1.55;
+  }
+
+  .visual-theme--c.mobile-layout .resume-panel {
+    margin-top: 1.15rem;
+    padding-block: 0.85rem;
+    font-size: 0.82rem;
+  }
+
+  .visual-theme--c.mobile-layout .question-screen {
+    align-content: start;
+    min-height: calc(100svh - var(--header-height) - env(safe-area-inset-top));
+    padding-top: clamp(0.8rem, 2.6svh, 1.4rem);
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+
+  .visual-theme--c.mobile-layout .question-panel,
+  .visual-theme--c.mobile-layout
+    .question-screen--deity-selection
+    .question-panel {
+    width: 100%;
+    padding: 0.7rem 0 1rem;
+    background:
+      radial-gradient(
+        ellipse at center,
+        rgba(3, 4, 10, 0.78),
+        rgba(3, 4, 10, 0.42) 58%,
+        transparent 84%
+      );
+  }
+
+  .visual-theme--c.mobile-layout .app-shell--deity .question-screen {
+    align-content: end;
+    padding-top: 1rem;
+    padding-bottom: max(1.35rem, calc(env(safe-area-inset-bottom) + 0.7rem));
+  }
+
+  .visual-theme--c.mobile-layout .app-shell--deity .question-panel {
+    background:
+      radial-gradient(
+        ellipse at center bottom,
+        rgba(3, 4, 10, 0.82),
+        rgba(3, 4, 10, 0.38) 58%,
+        transparent 86%
+      );
+  }
+
+  .visual-theme--c.mobile-layout .progress-indicator {
+    margin-bottom: 0.75rem;
+  }
+
+  .visual-theme--c.mobile-layout .progress-indicator__labels {
+    margin-bottom: 0.45rem;
+    font-size: 0.66rem;
+  }
+
+  .visual-theme--c.mobile-layout .progress-copy {
+    display: none;
+  }
+
+  .visual-theme--c.mobile-layout .question-title,
+  .visual-theme--c.mobile-layout
+    .question-screen--deity-selection
+    .question-title {
+    max-width: 22ch;
+    margin: 0.85rem auto 1.15rem;
+    font-size: clamp(1.45rem, 6.3vw, 2rem);
+    line-height: 1.35;
+  }
+
+  .visual-theme--c.mobile-layout .answers-grid {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .visual-theme--c.mobile-layout .answer-card {
+    min-height: 5.5rem;
+    padding: 0.9rem 0.65rem;
+    touch-action: manipulation;
+  }
+
+  .visual-theme--c.mobile-layout .answer-key {
+    margin-bottom: 0.4rem;
+    font-size: 0.66rem;
+  }
+
+  .visual-theme--c.mobile-layout .answer-title {
+    font-size: clamp(1rem, 4.25vw, 1.14rem);
+    line-height: 1.48;
+  }
+
+  .visual-theme--c.mobile-layout .answer-text {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .visual-theme--c.mobile-layout .question-footer {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+
+  .visual-theme--c.mobile-layout .back-button {
+    width: 100%;
+    min-height: 2.75rem;
+    justify-content: center;
+  }
+
+  .visual-theme--c.mobile-layout .reflection-wait {
+    min-height: 8.5rem;
+    padding: 1rem;
+  }
+
+  .visual-theme--c.mobile-layout .reflection-wait__count {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .visual-theme--c.mobile-layout
+    .app-shell--split
+    .question-panel {
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(2, 3, 8, 0.83) 19%,
+        rgba(2, 3, 8, 0.86) 81%,
+        transparent
+      );
+  }
+
+  .visual-theme--c.mobile-layout
+    .mystic-background--split
+    .mystic-background__veil {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(2, 3, 8, 0.1),
+        transparent 25%,
+        rgba(2, 3, 8, 0.78) 43%,
+        rgba(2, 3, 8, 0.78) 57%,
+        transparent 75%,
+        rgba(2, 3, 8, 0.1)
+      ),
+      linear-gradient(
+        180deg,
+        rgba(2, 3, 8, 0.18),
+        transparent 34%,
+        rgba(2, 3, 8, 0.68)
+      );
+  }
+
+  .visual-theme--c.mobile-layout .blessing-screen {
+    min-height: calc(100svh - var(--header-height) - env(safe-area-inset-top));
+    padding-top: 0.5rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card {
+    min-height: clamp(
+      36rem,
+      calc(100svh - var(--header-height) - 1.25rem),
+      46rem
+    );
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card__portrait {
+    min-height: 100%;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card__portrait img {
+    object-position: center 14%;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card__portrait-veil {
+    background:
+      linear-gradient(180deg, transparent 27%, rgba(2, 3, 8, 0.34) 49%, rgba(2, 3, 8, 0.96) 82%),
+      linear-gradient(90deg, rgba(2, 3, 8, 0.14), transparent 52%, rgba(2, 3, 8, 0.18));
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card__copy {
+    right: 0.9rem;
+    bottom: 1rem;
+    left: 0.9rem;
+    width: auto;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-kicker {
+    margin-bottom: 0.55rem;
+    font-size: 0.66rem;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card h1 {
+    font-size: clamp(2.45rem, 12vw, 3.65rem);
+    line-height: 1.08;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-description {
+    margin-top: 0.65rem;
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-message {
+    margin: 1.1rem 0 0.8rem;
+    font-size: 1.08rem;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card button {
+    width: 100%;
+  }
+
+  .visual-theme--c.mobile-layout .result-screen {
+    padding-top: 1.65rem;
+    padding-bottom: max(2.25rem, calc(env(safe-area-inset-bottom) + 1rem));
+  }
+
+  .visual-theme--c.mobile-layout .result-header {
+    margin-bottom: 1.5rem;
+    padding-inline: 0;
+  }
+
+  .visual-theme--c.mobile-layout .result-header h1 {
+    font-size: clamp(3.35rem, 22vw, 5.25rem);
+  }
+
+  .visual-theme--c.mobile-layout .result-subtitle {
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+
+  .visual-theme--c.mobile-layout .result-scene {
+    min-height: clamp(16rem, 58vw, 21rem);
+    margin-bottom: 1.25rem;
+  }
+
+  .visual-theme--c.mobile-layout .result-scene-image {
+    min-height: clamp(16rem, 58vw, 21rem);
+  }
+
+  .visual-theme--c.mobile-layout .result-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .visual-theme--c.mobile-layout .result-section {
+    padding: 1.25rem 0;
+  }
+
+  .visual-theme--c.mobile-layout .result-section h2 {
+    margin-bottom: 0.85rem;
+    font-size: 1.3rem;
+  }
+
+  .visual-theme--c.mobile-layout .result-actions {
+    width: 100%;
+    margin-top: 1.5rem;
+  }
+
+  .visual-theme--c.mobile-layout .result-actions button {
+    width: 100%;
+  }
+
+  .visual-theme--c.mobile-layout .confirm-backdrop {
+    align-items: end;
+    padding:
+      1rem
+      max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, calc(env(safe-area-inset-bottom) + 0.5rem))
+      max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .visual-theme--c.mobile-layout .confirm-dialog {
+    width: 100%;
+    padding: 1.25rem;
+  }
+
+  .visual-theme--c.mobile-layout .confirm-actions {
+    gap: 0.5rem;
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answers-grid--deity-selection {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity {
+    min-height: clamp(14.5rem, 39svh, 20rem);
+    padding: 0;
+    border-bottom-color: rgba(245, 241, 235, 0.28);
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity
+    .answer-card__body {
+    padding: 0.75rem 0.6rem;
+    background: linear-gradient(
+      180deg,
+      transparent 34%,
+      rgba(2, 3, 8, 0.58) 61%,
+      rgba(2, 3, 8, 0.97) 100%
+    );
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity
+    .answer-key {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity
+    .answer-title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: clamp(1.02rem, 4.7vw, 1.22rem);
+    line-height: 1.25;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity
+    .answer-text {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: clamp(0.7rem, 3vw, 0.8rem);
+    line-height: 1.42;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .visual-theme--c.mobile-layout--cinematic
+    .answers-grid--deity-selection {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .visual-theme--c.mobile-layout--cinematic
+    .answer-card--deity {
+    min-height: clamp(10.5rem, 24svh, 13.5rem);
+    padding: 0;
+    border-width: 0 0 1px;
+    border-color: rgba(245, 241, 235, 0.3);
+  }
+
+  .visual-theme--c.mobile-layout--cinematic
+    .answer-card--deity
+    .answer-card__image {
+    object-position: 70% 20%;
+  }
+
+  .visual-theme--c.mobile-layout--cinematic
+    .answer-card--deity
+    .answer-card__body {
+    justify-content: center;
+    padding: 2.1rem 44% 0.85rem 0.9rem;
+    background: linear-gradient(
+      90deg,
+      rgba(2, 3, 8, 0.98) 0%,
+      rgba(2, 3, 8, 0.94) 38%,
+      rgba(2, 3, 8, 0.7) 56%,
+      transparent 82%
+    );
+  }
+
+  .visual-theme--c.mobile-layout--cinematic
+    .answer-card--deity
+    .answer-key {
+    top: 0.65rem;
+    left: 0.9rem;
+  }
+
+  .visual-theme--c.mobile-layout--cinematic
+    .answer-card--deity
+    .answer-title {
+    font-size: clamp(1.16rem, 5vw, 1.42rem);
+    line-height: 1.25;
+  }
+
+  .visual-theme--c.mobile-layout--cinematic
+    .answer-card--deity
+    .answer-text {
+    display: -webkit-box;
+    overflow: hidden;
+    max-width: 20rem;
+    font-size: clamp(0.74rem, 3.25vw, 0.86rem);
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}
+
+@media (max-width: 23rem) {
+  .visual-theme--c.mobile-layout--compact
+    .answers-grid--deity-selection {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity {
+    min-height: clamp(13.5rem, 38svh, 17rem);
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity
+    .answer-title {
+    font-size: 1.02rem;
+  }
+
+  .visual-theme--c.mobile-layout--compact
+    .answer-card--deity
+    .answer-text {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 42rem) and (max-height: 44rem) {
+  .visual-theme--c.mobile-layout .blessing-card {
+    min-height: 34rem;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-card__copy {
+    bottom: 0.65rem;
+  }
+
+  .visual-theme--c.mobile-layout .blessing-description {
+    line-height: 1.45;
+  }
+}
+
+@media (max-width: 42rem) and (hover: none) and (pointer: coarse) {
+  .visual-theme--c.mobile-layout .answer-card:hover:not(:disabled),
+  .visual-theme--c.mobile-layout .primary-button:hover:not(:disabled),
+  .visual-theme--c.mobile-layout .secondary-button:hover:not(:disabled),
+  .visual-theme--c.mobile-layout .ghost-button:hover:not(:disabled),
+  .visual-theme--c.mobile-layout .back-button:hover:not(:disabled),
+  .visual-theme--c.mobile-layout .app-actions button:hover:not(:disabled),
+  .visual-theme--c.mobile-layout .home-actions button:hover:not(:disabled),
+  .visual-theme--c.mobile-layout .result-actions button:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .visual-theme--c.mobile-layout
+    .answer-card--deity:hover:not(:disabled)
+    .answer-card__image,
+  .visual-theme--c.mobile-layout .result-scene:hover .result-scene-image {
+    transform: none;
+  }
+}
