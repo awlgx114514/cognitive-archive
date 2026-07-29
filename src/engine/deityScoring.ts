@@ -201,7 +201,7 @@ export function resolveDynamicRoute(
   const firstWinner = Number(firstMatch[1]) as FirstRoundDeityId;
   const secondWinner = resolveRoundWinner(history, 2)
     .winnerId as SecondRoundDeityId;
-  return `Q_FINAL_GROUP_${finalGroupForDeities(firstWinner, secondWinner)}`;
+  return `Q_FINAL_GROUP_${finalGroupForDeities(firstWinner, secondWinner)}_DESIRE`;
 }
 
 export function getBlessingRound(
