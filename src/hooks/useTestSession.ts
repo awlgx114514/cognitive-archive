@@ -158,7 +158,7 @@ export function useTestSession(): UseTestSessionValue {
           config: testConfig,
         });
 
-        const nextSession = question.dynamicRoute
+        const nextSession = getBlessingRound(question.id)
           ? transition.session
           : finishTransition(transition.session);
         commitSession(nextSession);

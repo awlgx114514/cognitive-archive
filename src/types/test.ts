@@ -46,7 +46,8 @@ export type QuestionStage =
 
 export type DynamicRouteKind =
   | "first-round-score"
-  | "second-round-score";
+  | "second-round-score"
+  | "final-majority";
 
 export type QuestionNode = {
   id: string;

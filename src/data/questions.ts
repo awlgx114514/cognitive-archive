@@ -110,7 +110,7 @@ const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
   {
     question: "学习榜样人物，你倾向选择？",
     a: "身边的优秀前辈或行业标杆",
-    b: "书中的“只言片语、皆成箴言”的哲学家",
+      b: "书中的“只言片语、皆成箴言”的哲学家。",
   },
   {
     question: "你更愿待在哪种环境？",
@@ -136,19 +136,19 @@ const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
 
 const secondRoundQuestions: readonly BinaryQuestionSeed[] = [
   {
-    question: "哪项工作对你来说更轻松好玩？",
-    a: "管理与资源协调",
-    b: "公关与关系协调",
+    question: "下属犯错影响进度，但他确实家里遇到了极大变故，你会处罚吗？",
+    a: "给予关怀和支持，不忍心按规矩冰冷惩罚",
+    b: "同情归同情，但处罚要按规则处理“公事公办”",
   },
   {
-    question: "你会把票投给哪位演讲嘉宾？",
+    question: "你会把匿名票投给哪位演讲嘉宾？",
     a: "观点与我一致但似曾相识的陌生人",
     b: "观点与我矛盾但关系融洽的好友",
   },
   {
     question: "团队遇到危机，进度严重滞后，成员们情绪低落，你作为负责人会？",
-    a: "制定流程和标准，重启效率",
-    b: "解决人心和凝聚力，重振士气",
+    a: "制定流程和标准重启效率",
+    b: "解决人心和凝聚力重振士气",
   },
   {
     question: "你捍卫自己哪条底线？",
@@ -156,9 +156,9 @@ const secondRoundQuestions: readonly BinaryQuestionSeed[] = [
     b: "好恶不随世俗逐流",
   },
   {
-    question: "当你的方案被外界质疑，你会？",
-    a: "找现实案例证明方法管用",
-    b: "从底层原理推演给他们听",
+    question: "面对一个“实践证明有效，但底层逻辑矛盾”的方案，你的本能反应是？",
+    a: "管用就行，拿到结果最重要，懒得死磕逻辑瑕疵",
+    b: "有点难受，想把它背后的逻辑推导顺了",
   },
   {
     question: "听完朋友长时间负面情绪的倾诉后，你感到？",
@@ -171,9 +171,9 @@ const secondRoundQuestions: readonly BinaryQuestionSeed[] = [
     b: "思考本质，奇石是什么？从哪来？有没有危险或价值？",
   },
   {
-    question: "坚守道德底线的原因是？",
-    a: "感知他人疾苦，因而约定俗成的外在规范",
-    b: "倾听自我内心，所以更偏向个人的内心自律",
+    question: "看到别人皱眉或面露不悦，你会下意识地留意吗？",
+    a: "难免留心在意，甚至见不得别人受苦",
+    b: "鲜少关心重视，“子非鱼焉知鱼之乐”",
   },
 ];
 
@@ -209,8 +209,8 @@ function makeSecondRoundScoreQuestions(
       : `Q_R2_F${firstWinnerId}_SCORE_${ordinal + 1}`;
     const finalGroups =
       firstWinnerId === 1 || firstWinnerId === 4
-        ? ["Q_FINAL_GROUP_1_DESIRE", "Q_FINAL_GROUP_2_DESIRE"]
-        : ["Q_FINAL_GROUP_3_DESIRE", "Q_FINAL_GROUP_4_DESIRE"];
+        ? ["Q_FINAL_GROUP_1_1", "Q_FINAL_GROUP_2_1"]
+        : ["Q_FINAL_GROUP_3_1", "Q_FINAL_GROUP_4_1"];
     return makeQuestion({
       id,
       question: seed.question,
@@ -225,7 +225,7 @@ function makeSecondRoundScoreQuestions(
 
 const firstRoundSelection = makeQuestion({
   id: "Q_R1_GOD_SELECT",
-  question: "请选择你的神祇",
+  question: "请选择你的神祇：",
   detail: "请遵循本心选择神祇。",
   a: deitySelectionOption(1, "Q_R1_SCORE_1"),
   b: deitySelectionOption(2, "Q_R1_SCORE_1"),
@@ -240,8 +240,8 @@ function makeSecondRoundSelection(
   const nextQuestionId = `Q_R2_F${firstWinnerId}_SCORE_1`;
   return makeQuestion({
     id: `Q_R2_GOD_SELECT_F${firstWinnerId}`,
-    question: "请选择你的神祇",
-    detail: "请选择神祇，并遵循本心答题。",
+    question: "请选择你的神祇：",
+    detail: "请选择神祇，遵循本心答题。",
     a: deitySelectionOption(5, nextQuestionId),
     b: deitySelectionOption(6, nextQuestionId),
     c: deitySelectionOption(7, nextQuestionId),
@@ -250,168 +250,74 @@ function makeSecondRoundSelection(
   });
 }
 
-function terminalOption(
-  id: AnswerOptionId,
-  title: string,
-  calibrationTypeId: string,
-): AnswerOption {
-  return makeOption(id, {
-    title,
-    terminal: true,
-    calibrationTypeId,
-  });
-}
-
 type FinalGroup = 1 | 2 | 3 | 4;
-type FinalDesireOptionId = "A" | "B";
-type FinalFearOptionId = "A" | "B" | "C" | "D";
+type FinalBranch = "A" | "B";
 
-type FinalGroupSeed = {
-  desires: Readonly<Record<FinalDesireOptionId, string>>;
-  fears: Readonly<Record<FinalFearOptionId, string>>;
-  results: Readonly<
-    Record<
-      FinalDesireOptionId,
-      Readonly<Partial<Record<FinalFearOptionId, string>>>
-    >
-  >;
+type FinalOrderSeed = {
+  firstPhrase: string;
+  secondPhrase: string;
+  results: Readonly<Record<"A" | "B", string>>;
 };
 
-const finalFearOptionIds = ["A", "B", "C", "D"] as const;
-
-function finalFearQuestionId(
-  group: FinalGroup,
-  desireOptionId: FinalDesireOptionId,
-  removedFearOptionIds: readonly FinalFearOptionId[],
-): string {
-  const retrySuffix =
-    removedFearOptionIds.length > 0
-      ? `_RETRY_${removedFearOptionIds.join("")}`
-      : "";
-  return `Q_FINAL_GROUP_${group}_FEAR_${desireOptionId}${retrySuffix}`;
-}
-
-function makeFinalDesireQuestion(
-  group: FinalGroup,
-  seed: FinalGroupSeed,
-): QuestionNode {
-  return makeQuestion({
-    id: `Q_FINAL_GROUP_${group}_DESIRE`,
-    question: "更令你愉悦的是？",
-    a: {
-      title: seed.desires.A,
-      nextQuestionId: finalFearQuestionId(group, "A", []),
-    },
-    b: {
-      title: seed.desires.B,
-      nextQuestionId: finalFearQuestionId(group, "B", []),
-    },
-    stage: "calibration",
-    internalNote: `Final group ${group}; desire question`,
-  });
-}
-
-function makeFinalFearQuestion(
-  group: FinalGroup,
-  desireOptionId: FinalDesireOptionId,
-  seed: FinalGroupSeed,
-  removedFearOptionIds: readonly FinalFearOptionId[],
-): QuestionNode {
-  const removedFearOptionSet = new Set(removedFearOptionIds);
-  const remainingFearOptionIds = finalFearOptionIds.filter(
-    (fearOptionId) => !removedFearOptionSet.has(fearOptionId),
-  );
-  const options = remainingFearOptionIds.map((fearOptionId, index) => {
-    const displayedOptionId = finalFearOptionIds[index];
-    const resultTypeId = seed.results[desireOptionId][fearOptionId];
-    if (resultTypeId) {
-      return terminalOption(
-        displayedOptionId,
-        seed.fears[fearOptionId],
-        resultTypeId,
-      );
-    }
-
-    const nextRemovedFearOptionIds = finalFearOptionIds.filter(
-      (candidateId) =>
-        removedFearOptionSet.has(candidateId) || candidateId === fearOptionId,
-    );
-    return makeOption(displayedOptionId, {
-      title: seed.fears[fearOptionId],
-      nextQuestionId: finalFearQuestionId(
-        group,
-        desireOptionId,
-        nextRemovedFearOptionIds,
-      ),
-    });
-  });
-  const [a, b, c, d] = options;
-  if (!a || !b) {
-    throw new Error(`Final group ${group} retry must keep at least two options.`);
-  }
-
-  const id = finalFearQuestionId(
-    group,
-    desireOptionId,
-    removedFearOptionIds,
-  );
-  return {
-    id,
-    traceCode: `ARC-${id.replace("Q_", "")}`,
-    shortQuestion:
-      removedFearOptionIds.length > 0
-        ? "请遵从本心选择：最令你恐惧的是？"
-        : "最令你恐惧的是？",
-    question:
-      removedFearOptionIds.length > 0
-        ? "请遵从本心选择：最令你恐惧的是？"
-        : "最令你恐惧的是？",
-    options: {
-      A: a,
-      B: b,
-      ...(c ? { C: c } : {}),
-      ...(d ? { D: d } : {}),
-    },
-    allowUncertain: false,
-    transitionSceneId: transitionSceneIdForQuestion(id),
-    stage: "calibration",
-    internalNote: `Final group ${group}; desire=${desireOptionId}; removed fears=${removedFearOptionIds.join(",") || "none"}`,
-  };
-}
+type FinalGroupSeed = {
+  questions: readonly [
+    BinaryQuestionSeed,
+    BinaryQuestionSeed,
+    BinaryQuestionSeed,
+    BinaryQuestionSeed,
+  ];
+  orders: Readonly<Record<FinalBranch, FinalOrderSeed>>;
+};
 
 function makeFinalGroupQuestions(
   group: FinalGroup,
   seed: FinalGroupSeed,
 ): QuestionNode[] {
-  const questions = [makeFinalDesireQuestion(group, seed)];
+  const scoredQuestions = seed.questions.map((questionSeed, index) => {
+    const ordinal = index + 1;
+    const isLast = ordinal === seed.questions.length;
+    const id = `Q_FINAL_GROUP_${group}_${ordinal}`;
+    const nextQuestionId = isLast
+      ? undefined
+      : `Q_FINAL_GROUP_${group}_${ordinal + 1}`;
+    return makeQuestion({
+      id,
+      question: questionSeed.question,
+      a: { title: questionSeed.a, nextQuestionId },
+      b: { title: questionSeed.b, nextQuestionId },
+      stage: "calibration",
+      dynamicRoute: isLast ? "final-majority" : undefined,
+      dynamicNextQuestionIds: isLast
+        ? [
+            `Q_FINAL_GROUP_${group}_ORDER_A`,
+            `Q_FINAL_GROUP_${group}_ORDER_B`,
+          ]
+        : undefined,
+      internalNote: `Final group ${group}; score question ${ordinal}`,
+    });
+  });
 
-  for (const desireOptionId of ["A", "B"] as const) {
-    const rejectedFearOptionIds = finalFearOptionIds.filter(
-      (fearOptionId) => !seed.results[desireOptionId][fearOptionId],
-    );
-    if (rejectedFearOptionIds.length !== 2) {
-      throw new Error(`Final group ${group} must reject exactly two fear options.`);
-    }
+  const orderQuestions = (["A", "B"] as const).map((branch) => {
+    const order = seed.orders[branch];
+    return makeQuestion({
+      id: `Q_FINAL_GROUP_${group}_ORDER_${branch}`,
+      question: "填空题：XX是服务于XX",
+      a: {
+        title: `${order.firstPhrase}是服务于${order.secondPhrase}`,
+        terminal: true,
+        calibrationTypeId: order.results.A,
+      },
+      b: {
+        title: `${order.secondPhrase}是服务于${order.firstPhrase}`,
+        terminal: true,
+        calibrationTypeId: order.results.B,
+      },
+      stage: "calibration",
+      internalNote: `Final group ${group}; majority branch ${branch}`,
+    });
+  });
 
-    const retryStates: readonly (readonly FinalFearOptionId[])[] = [
-      [],
-      [rejectedFearOptionIds[0]],
-      [rejectedFearOptionIds[1]],
-      rejectedFearOptionIds,
-    ];
-    questions.push(
-      ...retryStates.map((removedFearOptionIds) =>
-        makeFinalFearQuestion(
-          group,
-          desireOptionId,
-          seed,
-          removedFearOptionIds,
-        ),
-      ),
-    );
-  }
-
-  return questions;
+  return [...scoredQuestions, ...orderQuestions];
 }
 
 const firstRoundScoreQuestions = makeFirstRoundScoreQuestions();
@@ -422,67 +328,147 @@ const secondRoundNodes = firstRoundDeityIds.flatMap((firstWinnerId) => [
 
 const finalGroupSeeds: Readonly<Record<FinalGroup, FinalGroupSeed>> = {
   1: {
-    desires: {
-      A: "体验享乐/协调规划到完成任务",
-      B: "倾听内心的喜好和感受/想象预测",
-    },
-    fears: {
-      A: "细菌病毒",
-      B: "工作重负",
-      C: "情绪失控",
-      D: "嘈杂的噪音环境/“恐高”实则距离边缘三四米外",
-    },
-    results: {
-      A: { A: "ESFP", C: "ENTJ" },
-      B: { B: "ISFP", D: "INTJ" },
+    questions: [
+      {
+        question: "哪一个对你更重要？",
+        a: "体验享乐",
+        b: "协调规划到完成任务",
+      },
+      {
+        question: "哪一个对你更重要？",
+        a: "倾听内心的喜好和感受",
+        b: "想象预测",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "细菌病毒或噩运缠身",
+        b: "情绪崩溃失控",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "加班到没有个人生活",
+        b: "喧闹嘈杂到无法思考",
+      },
+    ],
+    orders: {
+      A: {
+        firstPhrase: "倾听内心的喜好和感受",
+        secondPhrase: "体验享乐",
+        results: { A: "ESFP", B: "ISFP" },
+      },
+      B: {
+        firstPhrase: "想象预测",
+        secondPhrase: "协调规划到完成任务",
+        results: { A: "ENTJ", B: "INTJ" },
+      },
     },
   },
   2: {
-    desires: {
-      A: "体验享乐/与他人建立联结",
-      B: "推敲命名达成深度理解/想象预测",
-    },
-    fears: {
-      A: "未来噩运缠身",
-      B: "高强度令人窒息的社交",
-      C: "被指责或质疑“逻辑不通”",
-      D: "嘈杂的噪音环境/“恐高”实则距离边缘三四米外",
-    },
-    results: {
-      A: { A: "ESTP", C: "ENFJ" },
-      B: { B: "ISTP", D: "INFJ" },
+    questions: [
+      {
+        question: "哪一个对你更重要？",
+        a: "体验享乐",
+        b: "肯定他人并与之共情",
+      },
+      {
+        question: "哪一个对你更重要？",
+        a: "推敲命名达成深度理解",
+        b: "想象预测",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "细菌病毒或噩运缠身",
+        b: "被指责或质疑“逻辑不通”",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "高强度令人窒息的社交",
+        b: "喧闹嘈杂到无法思考",
+      },
+    ],
+    orders: {
+      A: {
+        firstPhrase: "推敲命名达成深度理解",
+        secondPhrase: "体验享乐",
+        results: { A: "ESTP", B: "ISTP" },
+      },
+      B: {
+        firstPhrase: "想象预测",
+        secondPhrase: "肯定他人并与之共情",
+        results: { A: "ENFJ", B: "INFJ" },
+      },
     },
   },
   3: {
-    desires: {
-      A: "奇思妙想到创意涌现/协调规划到完成任务",
-      B: "验证复盘/倾听内心的喜好和感受建立专属自己的价值体系",
-    },
-    fears: {
-      A: "机械重复的日常工作",
-      B: "工作重负",
-      C: "情绪失控",
-      D: "混乱",
-    },
-    results: {
-      A: { A: "ENFP", C: "ESTJ" },
-      B: { B: "INFP", D: "ISTJ" },
+    questions: [
+      {
+        question: "哪一个对你更重要？",
+        a: "奇思妙想到创意涌现",
+        b: "协调规划到完成任务",
+      },
+      {
+        question: "哪一个对你更重要？",
+        a: "倾听内心的喜好和感受",
+        b: "验证复盘",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "机械重复的日常工作",
+        b: "情绪崩溃失控",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "加班到没有个人生活",
+        b: "混乱",
+      },
+    ],
+    orders: {
+      A: {
+        firstPhrase: "倾听内心的喜好和感受",
+        secondPhrase: "奇思妙想到创意涌现",
+        results: { A: "ENFP", B: "INFP" },
+      },
+      B: {
+        firstPhrase: "验证复盘",
+        secondPhrase: "协调规划到完成任务",
+        results: { A: "ESTJ", B: "ISTJ" },
+      },
     },
   },
   4: {
-    desires: {
-      A: "奇思妙想到创意涌现/与他人建立联结",
-      B: "推敲命名达成深度理解/验证复盘",
-    },
-    fears: {
-      A: "机械重复的日常工作",
-      B: "高强度令人窒息的社交",
-      C: "被指责或质疑“逻辑不通”",
-      D: "混乱",
-    },
-    results: {
-      A: { A: "ENTP", C: "ESFJ" },
-      B: { B: "INTP", D: "ISFJ" },
+    questions: [
+      {
+        question: "哪一个对你更重要？",
+        a: "奇思妙想到创意涌现",
+        b: "肯定他人并与之共情",
+      },
+      {
+        question: "哪一个对你更重要？",
+        a: "推敲命名达成深度理解",
+        b: "验证复盘",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "机械重复的日常工作",
+        b: "被指责或质疑“逻辑不通”",
+      },
+      {
+        question: "哪一个更令你不适？",
+        a: "高强度令人窒息的社交",
+        b: "混乱",
+      },
+    ],
+    orders: {
+      A: {
+        firstPhrase: "推敲命名达成深度理解",
+        secondPhrase: "奇思妙想到创意涌现",
+        results: { A: "ENTP", B: "INTP" },
+      },
+      B: {
+        firstPhrase: "验证复盘",
+        secondPhrase: "肯定他人并与之共情",
+        results: { A: "ESFJ", B: "ISFJ" },
+      },
     },
   },
 };

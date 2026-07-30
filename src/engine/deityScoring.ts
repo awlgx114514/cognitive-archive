@@ -42,7 +42,7 @@ const secondSelectionTargets: Readonly<
 
 /**
  * Each tuple is [A target, B target]. It is a direct transcription of the
- * 第五版 score table supplied by the user.
+ * 第七版 score table supplied by the user.
  */
 const firstRoundScoreTargets = [
   [1, 2],
@@ -183,6 +183,33 @@ export function finalGroupForDeities(
   return 4;
 }
 
+function resolveFinalBranch(
+  history: readonly HistoryEntry[],
+  group: 1 | 2 | 3 | 4,
+): "A" | "B" {
+  const finalAnswers = history.filter((entry) =>
+    new RegExp(`^Q_FINAL_GROUP_${group}_[1-4]$`).test(entry.questionId),
+  );
+  if (finalAnswers.length !== 4) {
+    throw new Error(
+      `Final group ${group} requires exactly four scored answers.`,
+    );
+  }
+
+  const aCount = finalAnswers.filter(
+    (entry) => entry.selectedOptionId === "A",
+  ).length;
+  const bCount = finalAnswers.filter(
+    (entry) => entry.selectedOptionId === "B",
+  ).length;
+  if (aCount > bCount) return "A";
+  if (bCount > aCount) return "B";
+
+  const firstWinner = resolveRoundWinner(history, 1)
+    .winnerId as FirstRoundDeityId;
+  return firstWinner === 1 || firstWinner === 2 ? "A" : "B";
+}
+
 export function resolveDynamicRoute(
   route: DynamicRouteKind,
   history: readonly HistoryEntry[],
@@ -194,14 +221,25 @@ export function resolveDynamicRoute(
     return `Q_R2_GOD_SELECT_F${firstWinner}`;
   }
 
-  const firstMatch = /^Q_R2_F([1-4])_SCORE_8$/.exec(currentQuestionId);
-  if (!firstMatch?.[1]) {
-    throw new Error(`Cannot resolve second-round route from ${currentQuestionId}.`);
+  if (route === "second-round-score") {
+    const firstMatch = /^Q_R2_F([1-4])_SCORE_8$/.exec(currentQuestionId);
+    if (!firstMatch?.[1]) {
+      throw new Error(
+        `Cannot resolve second-round route from ${currentQuestionId}.`,
+      );
+    }
+    const firstWinner = Number(firstMatch[1]) as FirstRoundDeityId;
+    const secondWinner = resolveRoundWinner(history, 2)
+      .winnerId as SecondRoundDeityId;
+    return `Q_FINAL_GROUP_${finalGroupForDeities(firstWinner, secondWinner)}_1`;
   }
-  const firstWinner = Number(firstMatch[1]) as FirstRoundDeityId;
-  const secondWinner = resolveRoundWinner(history, 2)
-    .winnerId as SecondRoundDeityId;
-  return `Q_FINAL_GROUP_${finalGroupForDeities(firstWinner, secondWinner)}_DESIRE`;
+
+  const finalMatch = /^Q_FINAL_GROUP_([1-4])_4$/.exec(currentQuestionId);
+  if (!finalMatch?.[1]) {
+    throw new Error(`Cannot resolve final route from ${currentQuestionId}.`);
+  }
+  const group = Number(finalMatch[1]) as 1 | 2 | 3 | 4;
+  return `Q_FINAL_GROUP_${group}_ORDER_${resolveFinalBranch(history, group)}`;
 }
 
 export function getBlessingRound(
