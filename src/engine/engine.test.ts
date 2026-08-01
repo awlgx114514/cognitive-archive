@@ -109,37 +109,32 @@ function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
 function completedPath(
   firstDeityId: FirstDeityId,
   secondDeityId: SecondDeityId,
-  finalAnswers: readonly [
-    "A" | "B",
-    "A" | "B",
-    "A" | "B",
-    "A" | "B",
-  ],
-  finalOrderOptionId: "A" | "B",
+  finalCandidateOptionId: "A" | "B" | "C" | "D",
+  finalCalibrationOptionId: "A" | "B",
 ): TestSession {
   return answerPath([
     firstSelectionAnswers[firstDeityId],
     ...firstWinnerAnswers[firstDeityId],
     secondSelectionAnswers[secondDeityId],
     ...secondWinnerAnswers[secondDeityId],
-    ...finalAnswers,
-    finalOrderOptionId,
+    finalCandidateOptionId,
+    finalCalibrationOptionId,
   ]);
 }
 
-describe("seventh-edition scored question bank", () => {
-  it("is structurally valid and every complete route contains 23 answers", () => {
+describe("eighth-edition scored question bank", () => {
+  it("is structurally valid and every complete route contains 20 answers", () => {
     const report = validateDemoContent();
     const analysis = analyzeConfiguredPaths();
 
     expect(report.valid).toBe(true);
     expect(report.errors).toHaveLength(0);
     expect(analysis.incompletePaths).toHaveLength(0);
-    expect(analysis.shortestPathLength).toBe(23);
-    expect(analysis.longestPathLength).toBe(23);
-    expect(testConfig.minimumPathLength).toBe(23);
-    expect(testConfig.maximumPathLength).toBe(23);
-    expect(testConfig.storageVersion).toBe("10.0.0");
+    expect(analysis.shortestPathLength).toBe(20);
+    expect(analysis.longestPathLength).toBe(20);
+    expect(testConfig.minimumPathLength).toBe(20);
+    expect(testConfig.maximumPathLength).toBe(20);
+    expect(testConfig.storageVersion).toBe("11.0.0");
   });
 
   it("starts each round with the requested four deity cards", () => {
@@ -149,6 +144,10 @@ describe("seventh-edition scored question bank", () => {
     expect(firstSelection?.options.A.title).toBe("现世主宰");
     expect(firstSelection?.options.A.text).toBe("主宰即时体验与享乐之神");
     expect(firstSelection?.options.A.nextQuestionId).toBe("Q_R1_SCORE_1");
+    expect(firstSelection?.options.C?.title).toBe("司岁帝君");
+    expect(firstSelection?.options.C?.text).toBe(
+      "执笔万纪万象与铭记之神",
+    );
     expect(firstSelection?.options.D?.title).toBe("太虚灵官");
     expect(firstSelection?.options.D?.nextQuestionId).toBe("Q_R1_SCORE_1");
 
@@ -176,9 +175,9 @@ describe("seventh-edition scored question bank", () => {
     );
   });
 
-  it("contains the exact seventh-edition question wording", () => {
+  it("contains the exact eighth-edition first and second round wording", () => {
     const expectedFirstRound = [
-      ["你更喜欢？", "身体舒适", "脑嗨"],
+      ["健康无恙时你更喜欢？", "身体舒适", "脑嗨"],
       [
         "感到更舒适的是？",
         "重温发生过的经验和细节",
@@ -190,9 +189,9 @@ describe("seventh-edition scored question bank", () => {
         "遥远新奇古怪的事物",
       ],
       [
-        "学习榜样人物，你倾向选择？",
-        "身边的优秀前辈或行业标杆",
-        "书中的“只言片语、皆成箴言”的哲学家。",
+        "对“未来与记忆”的生理本能更接近？",
+        "对未来莫名忧心忡忡，自然会把痛苦记忆塞到脑海角落",
+        "对未来大多持积极心态，但质疑权威和历史的作用",
       ],
       ["你更愿待在哪种环境？", "陌生刺激的环境", "熟悉安全的环境"],
       ["哪一个让你更投入？", "喧嚣的头脑风暴", "寂静的冥想"],
@@ -202,9 +201,9 @@ describe("seventh-edition scored question bank", () => {
         "质地朴素历史沉淀的文物",
       ],
       [
-        "你更喜欢哪类结局？",
-        "引人遐想的开放式结局",
-        "结构完整的确定的结局",
+        "回忆一段数年前还清晰的记忆切片，你脑海里的画面更接近（注：少数人是音频，无画面）",
+        "纪录片，清晰且牢固，甚至还能重现当时的细节或氛围",
+        "抽象画，细节早已褪色，只剩下某种模糊的感觉和轮廓。",
       ],
     ] as const;
     expect(
@@ -215,9 +214,9 @@ describe("seventh-edition scored question bank", () => {
 
     const expectedSecondRound = [
       [
-        "下属犯错影响进度，但他确实家里遇到了极大变故，你会处罚吗？",
-        "给予关怀和支持，不忍心按规矩冰冷惩罚",
-        "同情归同情，但处罚要按规则处理“公事公办”",
+        "当团队遇到危机，进度严重滞后，成员们情绪低落，你作为负责人会？",
+        "制定流程和标准重启效率",
+        "解决人心和凝聚力重振士气",
       ],
       [
         "你会把匿名票投给哪位演讲嘉宾？",
@@ -225,9 +224,9 @@ describe("seventh-edition scored question bank", () => {
         "观点与我矛盾但关系融洽的好友",
       ],
       [
-        "团队遇到危机，进度严重滞后，成员们情绪低落，你作为负责人会？",
-        "制定流程和标准重启效率",
-        "解决人心和凝聚力重振士气",
+        "公司机构臃肿，上层勾心斗角，你会如何力挽狂澜？",
+        "裁员，调研清楚后果断裁员，不惜把一整个部门裁撤",
+        "替换，跨部门人员调整，把有能力有工作热情的人换上来，悄无声息地完成权力交接。",
       ],
       ["你捍卫自己哪条底线？", "利益不被他人裹挟", "好恶不随世俗逐流"],
       [
@@ -257,66 +256,10 @@ describe("seventh-edition scored question bank", () => {
       ),
     ).toEqual(expectedSecondRound);
 
-    const expectedFinalGroups = {
-      1: [
-        ["哪一个对你更重要？", "体验享乐", "协调规划到完成任务"],
-        ["哪一个对你更重要？", "倾听内心的喜好和感受", "想象预测"],
-        ["哪一个更令你不适？", "细菌病毒或噩运缠身", "情绪崩溃失控"],
-        [
-          "哪一个更令你不适？",
-          "加班到没有个人生活",
-          "喧闹嘈杂到无法思考",
-        ],
-      ],
-      2: [
-        ["哪一个对你更重要？", "体验享乐", "肯定他人并与之共情"],
-        ["哪一个对你更重要？", "推敲命名达成深度理解", "想象预测"],
-        [
-          "哪一个更令你不适？",
-          "细菌病毒或噩运缠身",
-          "被指责或质疑“逻辑不通”",
-        ],
-        [
-          "哪一个更令你不适？",
-          "高强度令人窒息的社交",
-          "喧闹嘈杂到无法思考",
-        ],
-      ],
-      3: [
-        [
-          "哪一个对你更重要？",
-          "奇思妙想到创意涌现",
-          "协调规划到完成任务",
-        ],
-        ["哪一个对你更重要？", "倾听内心的喜好和感受", "验证复盘"],
-        ["哪一个更令你不适？", "机械重复的日常工作", "情绪崩溃失控"],
-        ["哪一个更令你不适？", "加班到没有个人生活", "混乱"],
-      ],
-      4: [
-        [
-          "哪一个对你更重要？",
-          "奇思妙想到创意涌现",
-          "肯定他人并与之共情",
-        ],
-        ["哪一个对你更重要？", "推敲命名达成深度理解", "验证复盘"],
-        [
-          "哪一个更令你不适？",
-          "机械重复的日常工作",
-          "被指责或质疑“逻辑不通”",
-        ],
-        ["哪一个更令你不适？", "高强度令人窒息的社交", "混乱"],
-      ],
-    } as const;
-    for (const group of [1, 2, 3, 4] as const) {
-      expect(
-        expectedFinalGroups[group].map((_, index) =>
-          visibleQuestionTuple(`Q_FINAL_GROUP_${group}_${index + 1}`),
-        ),
-      ).toEqual(expectedFinalGroups[group]);
-    }
-
     expect(getQuestionById("Q_R1_SCORE_1")?.options.A.text).toBe("");
     expect(deityProfiles[2].desire).toBe("奇思妙想到创意涌现");
+    expect(deityProfiles[3].name).toBe("司岁帝君");
+    expect(deityProfiles[3].description).toBe("执笔万纪万象与铭记之神");
     expect(deityProfiles[5].description).toBe(
       "统辖协调规划与法令严正之神",
     );
@@ -324,15 +267,81 @@ describe("seventh-edition scored question bank", () => {
     expect(deityProfiles[7].description).toBe(
       "主导鉴真破妄与利弊权衡之神",
     );
+    expect(deityProfiles[7].desire).toBe("演绎逻辑达成深度理解");
     expect(deityProfiles[8].desire).toBe(
       "倾听内心的喜好和感受建立专属自己的价值体系",
     );
-    expect(getQuestionById("Q_FINAL_GROUP_1_ORDER_A")?.shortQuestion).toBe(
-      "填空题：XX是服务于XX",
-    );
-    expect(getQuestionById("Q_FINAL_GROUP_1_ORDER_A")?.options.A.title).toBe(
-      "倾听内心的喜好和感受是服务于体验享乐",
-    );
+  });
+
+  it("contains the exact eighth-edition two-question final sections", () => {
+    const prompt =
+      "在日常生活中，下列哪一种状态最能代表你最核心、最不假思索的心理本能与安全感来源？";
+    const expectedGroups = {
+      1: [
+        ["追求行动与体验享乐", "极度看重当下的真实感知、刺激与回应，本能地拥抱现实与行动。"],
+        ["追求价值与真我契合", "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。"],
+        ["追求规划与任务完成", "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。"],
+        ["追求想象与洞察预测", "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。"],
+      ],
+      2: [
+        ["追求行动与体验享乐", "极度看重当下的真实感知与快速反应，本能地拥抱现实、解决眼前的危机。"],
+        ["追求解构与逻辑自洽", "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。"],
+        ["追求道德与他人共情", "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。"],
+        ["追求想象与洞察预测", "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。"],
+      ],
+      3: [
+        ["追求创意与奇思妙想", "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。"],
+        ["追求价值与真我契合", "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。"],
+        ["追求规划与任务完成", "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。"],
+        ["追求安全与验证复盘", "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。"],
+      ],
+      4: [
+        ["追求创意与奇思妙想", "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。"],
+        ["追求解构与逻辑自洽", "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。"],
+        ["追求道德与他人共情", "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。"],
+        ["追求安全与验证复盘", "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。"],
+      ],
+    } as const;
+    const expectedCalibrationOptions = {
+      1: [
+        "噩运缠身/加班到没有个人生活",
+        "情绪崩溃失控/喧闹嘈杂到无法思考",
+      ],
+      2: [
+        "噩运缠身/高强度令人窒息的社交",
+        "被指责或质疑“逻辑不通”/喧闹嘈杂到无法思考",
+      ],
+      3: [
+        "机械重复的日常工作/加班到没有个人生活",
+        "情绪崩溃失控/混乱",
+      ],
+      4: [
+        "机械重复的日常工作/高强度令人窒息的社交",
+        "被指责或质疑“逻辑不通”/混乱",
+      ],
+    } as const;
+
+    for (const group of [1, 2, 3, 4] as const) {
+      const candidateQuestion = getQuestionById(`Q_FINAL_GROUP_${group}_1`);
+      expect(candidateQuestion?.shortQuestion).toBe(prompt);
+      expect(["A", "B", "C", "D"].map((optionId) => {
+        const option = candidateQuestion?.options[optionId as AnswerOptionId];
+        return [option?.title, option?.text];
+      })).toEqual(expectedGroups[group]);
+
+      for (const candidate of ["A", "B", "C", "D"] as const) {
+        const calibration = getQuestionById(
+          `Q_FINAL_GROUP_${group}_CAL_${candidate}`,
+        );
+        expect(calibration?.shortQuestion).toBe(
+          "【潜意识校对】下列哪一组更令你不适？",
+        );
+        expect([
+          calibration?.options.A.title,
+          calibration?.options.B.title,
+        ]).toEqual(expectedCalibrationOptions[group]);
+      }
+    }
   });
 
   it("does not expose MBTI result hints in any reader-visible question text", () => {
@@ -448,99 +457,57 @@ describe("seventh-edition scored question bank", () => {
   );
 
   it.each([
-    ["ESFP", 1, 5, ["A", "A", "A", "B"], "A"],
-    ["ISFP", 1, 5, ["A", "A", "A", "B"], "B"],
-    ["ENTJ", 1, 5, ["B", "B", "B", "A"], "A"],
-    ["INTJ", 1, 5, ["B", "B", "B", "A"], "B"],
-    ["ESTP", 1, 6, ["A", "A", "A", "B"], "A"],
-    ["ISTP", 1, 6, ["A", "A", "A", "B"], "B"],
-    ["ENFJ", 1, 6, ["B", "B", "B", "A"], "A"],
-    ["INFJ", 1, 6, ["B", "B", "B", "A"], "B"],
-    ["ENFP", 2, 5, ["A", "A", "A", "B"], "A"],
-    ["INFP", 2, 5, ["A", "A", "A", "B"], "B"],
-    ["ESTJ", 2, 5, ["B", "B", "B", "A"], "A"],
-    ["ISTJ", 2, 5, ["B", "B", "B", "A"], "B"],
-    ["ENTP", 2, 6, ["A", "A", "A", "B"], "A"],
-    ["INTP", 2, 6, ["A", "A", "A", "B"], "B"],
-    ["ESFJ", 2, 6, ["B", "B", "B", "A"], "A"],
-    ["ISFJ", 2, 6, ["B", "B", "B", "A"], "B"],
+    ["ESFP", 1, 5, "A", "A"],
+    ["ISFP", 1, 5, "B", "A"],
+    ["ENTJ", 1, 5, "C", "B"],
+    ["INTJ", 1, 5, "D", "B"],
+    ["ESTP", 1, 6, "A", "A"],
+    ["ISTP", 1, 6, "B", "A"],
+    ["ENFJ", 1, 6, "C", "B"],
+    ["INFJ", 1, 6, "D", "B"],
+    ["ENFP", 2, 5, "A", "A"],
+    ["INFP", 2, 5, "B", "A"],
+    ["ESTJ", 2, 5, "C", "B"],
+    ["ISTJ", 2, 5, "D", "B"],
+    ["ENTP", 2, 6, "A", "A"],
+    ["INTP", 2, 6, "B", "A"],
+    ["ESFJ", 2, 6, "C", "B"],
+    ["ISFJ", 2, 6, "D", "B"],
   ] as const)(
     "can complete the %s result",
     (
       expectedType,
       firstDeityId,
       secondDeityId,
-      finalAnswers,
-      finalOrderOptionId,
+      finalCandidateOptionId,
+      finalCalibrationOptionId,
     ) => {
       const session = completedPath(
         firstDeityId,
         secondDeityId,
-        finalAnswers,
-        finalOrderOptionId,
+        finalCandidateOptionId,
+        finalCalibrationOptionId,
       );
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(23);
+      expect(session.history).toHaveLength(20);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
   );
 
-  it.each([
-    [1, 5, 1, "A"],
-    [4, 5, 1, "B"],
-    [1, 6, 2, "A"],
-    [4, 6, 2, "B"],
-    [2, 5, 3, "A"],
-    [3, 5, 3, "B"],
-    [2, 6, 4, "A"],
-    [3, 6, 4, "B"],
-  ] as const)(
-    "uses deity pair %s%s to break a 2:2 tie toward branch %s",
-    (firstDeityId, secondDeityId, group, expectedBranch) => {
-      const session = answerPath([
-        firstSelectionAnswers[firstDeityId],
-        ...firstWinnerAnswers[firstDeityId],
-        secondSelectionAnswers[secondDeityId],
-        ...secondWinnerAnswers[secondDeityId],
-        "A",
-        "A",
-        "B",
-        "B",
-      ]);
+  it("marks a mismatched subconscious calibration for retesting", () => {
+    const session = completedPath(1, 5, "A", "B");
+    const result = calculateResult(session.history, questions);
 
-      expect(session.currentQuestionId).toBe(
-        `Q_FINAL_GROUP_${group}_ORDER_${expectedBranch}`,
-      );
-    },
-  );
-
-  it("uses the four-answer majority before the deity-pair tie break", () => {
-    const branchB = answerPath([
-      firstSelectionAnswers[1],
-      ...firstWinnerAnswers[1],
-      secondSelectionAnswers[5],
-      ...secondWinnerAnswers[5],
-      "B",
-      "B",
-      "B",
-      "A",
-    ]);
-    expect(branchB.currentQuestionId).toBe("Q_FINAL_GROUP_1_ORDER_B");
-
-    const branchA = answerPath([
-      firstSelectionAnswers[4],
-      ...firstWinnerAnswers[4],
-      secondSelectionAnswers[5],
-      ...secondWinnerAnswers[5],
-      "A",
-      "A",
-      "A",
-      "B",
-    ]);
-    expect(branchA.currentQuestionId).toBe("Q_FINAL_GROUP_1_ORDER_A");
+    expect(session.status).toBe("completed");
+    expect(result.resultTypeId).toBe("ESFP");
+    expect(result.needsRetest).toBe(true);
+    expect(result.calibrationMatched).toBe(false);
+    expect(result.retestReason).toBe(
+      "潜意识校对失败，请遵循本心，返回第三轮题目重选。",
+    );
   });
 });
 
@@ -564,12 +531,7 @@ describe("session invariants", () => {
   });
 
   it("restores a completed dynamically routed session", () => {
-    const completed = completedPath(
-      4,
-      8,
-      ["B", "B", "B", "A"],
-      "B",
-    );
+    const completed = completedPath(4, 8, "D", "B");
     const restored = restoreTestSession(
       JSON.parse(JSON.stringify(completed)),
       questions,
