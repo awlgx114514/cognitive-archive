@@ -36,6 +36,7 @@ export function AppShell() {
     error,
     start,
     restart,
+    retryFinalRound,
     answer,
     back,
     reset,
@@ -201,11 +202,11 @@ export function AppShell() {
               type="button"
               className="primary-button"
               onClick={() => {
-                restart();
+                retryFinalRound();
                 setShowHome(false);
               }}
             >
-              一键重新测试
+              返回第三轮重选
             </button>
           </div>
         </section>
