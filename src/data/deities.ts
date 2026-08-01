@@ -29,8 +29,8 @@ export const deityProfiles: Readonly<Record<DeityId, DeityProfile>> = {
   },
   3: {
     id: 3,
-    name: "太史文官",
-    description: "管理历史记录与记忆之神",
+    name: "司岁帝君",
+    description: "执笔万纪万象与铭记之神",
     desire: "验证复盘",
     functionKey: "Si",
   },
@@ -59,7 +59,7 @@ export const deityProfiles: Readonly<Record<DeityId, DeityProfile>> = {
     id: 7,
     name: "洞真道君",
     description: "主导鉴真破妄与利弊权衡之神",
-    desire: "推敲命名达成深度理解",
+    desire: "演绎逻辑达成深度理解",
     functionKey: "Ti",
   },
   8: {
