@@ -18,7 +18,9 @@ type OptionSeed = {
   text?: string;
   nextQuestionId?: string;
   terminal?: boolean;
+  typeHintId?: string;
   calibrationTypeId?: string;
+  requiresRetest?: boolean;
   internalNote?: string;
 };
 
@@ -31,6 +33,7 @@ type QuestionSeed = {
   c?: OptionSeed;
   d?: OptionSeed;
   stage?: QuestionStage;
+  consistencyGroupId?: string;
   dynamicRoute?: DynamicRouteKind;
   dynamicNextQuestionIds?: string[];
   internalNote?: string;
@@ -53,7 +56,9 @@ function makeOption(id: AnswerOptionId, seed: OptionSeed): AnswerOption {
     text: seed.text ?? "",
     nextQuestionId: seed.nextQuestionId,
     terminal: seed.terminal,
+    typeHintId: seed.typeHintId,
     calibrationTypeId: seed.calibrationTypeId,
+    requiresRetest: seed.requiresRetest,
     internalNote: seed.internalNote,
   };
 }
@@ -73,6 +78,7 @@ function makeQuestion(seed: QuestionSeed): QuestionNode {
     allowUncertain: false,
     transitionSceneId: transitionSceneIdForQuestion(seed.id),
     stage: seed.stage ?? "core",
+    consistencyGroupId: seed.consistencyGroupId,
     dynamicRoute: seed.dynamicRoute,
     dynamicNextQuestionIds: seed.dynamicNextQuestionIds,
     internalNote: seed.internalNote,
@@ -93,7 +99,7 @@ function deitySelectionOption(
 
 const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
   {
-    question: "你更喜欢？",
+    question: "健康无恙时你更喜欢？",
     a: "身体舒适",
     b: "脑嗨",
   },
@@ -108,9 +114,9 @@ const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
     b: "遥远新奇古怪的事物",
   },
   {
-    question: "学习榜样人物，你倾向选择？",
-    a: "身边的优秀前辈或行业标杆",
-      b: "书中的“只言片语、皆成箴言”的哲学家。",
+    question: "对“未来与记忆”的生理本能更接近？",
+    a: "对未来莫名忧心忡忡，自然会把痛苦记忆塞到脑海角落",
+    b: "对未来大多持积极心态，但质疑权威和历史的作用",
   },
   {
     question: "你更愿待在哪种环境？",
@@ -128,17 +134,19 @@ const firstRoundQuestions: readonly BinaryQuestionSeed[] = [
     b: "质地朴素历史沉淀的文物",
   },
   {
-    question: "你更喜欢哪类结局？",
-    a: "引人遐想的开放式结局",
-    b: "结构完整的确定的结局",
+    question:
+      "回忆一段数年前还清晰的记忆切片，你脑海里的画面更接近（注：少数人是音频，无画面）",
+    a: "纪录片，清晰且牢固，甚至还能重现当时的细节或氛围",
+    b: "抽象画，细节早已褪色，只剩下某种模糊的感觉和轮廓。",
   },
 ];
 
 const secondRoundQuestions: readonly BinaryQuestionSeed[] = [
   {
-    question: "下属犯错影响进度，但他确实家里遇到了极大变故，你会处罚吗？",
-    a: "给予关怀和支持，不忍心按规矩冰冷惩罚",
-    b: "同情归同情，但处罚要按规则处理“公事公办”",
+    question:
+      "当团队遇到危机，进度严重滞后，成员们情绪低落，你作为负责人会？",
+    a: "制定流程和标准重启效率",
+    b: "解决人心和凝聚力重振士气",
   },
   {
     question: "你会把匿名票投给哪位演讲嘉宾？",
@@ -146,9 +154,9 @@ const secondRoundQuestions: readonly BinaryQuestionSeed[] = [
     b: "观点与我矛盾但关系融洽的好友",
   },
   {
-    question: "团队遇到危机，进度严重滞后，成员们情绪低落，你作为负责人会？",
-    a: "制定流程和标准重启效率",
-    b: "解决人心和凝聚力重振士气",
+    question: "公司机构臃肿，上层勾心斗角，你会如何力挽狂澜？",
+    a: "裁员，调研清楚后果断裁员，不惜把一整个部门裁撤",
+    b: "替换，跨部门人员调整，把有能力有工作热情的人换上来，悄无声息地完成权力交接。",
   },
   {
     question: "你捍卫自己哪条底线？",
@@ -251,73 +259,79 @@ function makeSecondRoundSelection(
 }
 
 type FinalGroup = 1 | 2 | 3 | 4;
-type FinalBranch = "A" | "B";
+type FinalCandidateOptionId = "A" | "B" | "C" | "D";
+type FinalCalibrationOptionId = "A" | "B";
 
-type FinalOrderSeed = {
-  firstPhrase: string;
-  secondPhrase: string;
-  results: Readonly<Record<"A" | "B", string>>;
+type FinalCandidateSeed = {
+  title: string;
+  text: string;
+  resultTypeId: string;
+  calibrationAnswer: FinalCalibrationOptionId;
 };
 
 type FinalGroupSeed = {
-  questions: readonly [
-    BinaryQuestionSeed,
-    BinaryQuestionSeed,
-    BinaryQuestionSeed,
-    BinaryQuestionSeed,
-  ];
-  orders: Readonly<Record<FinalBranch, FinalOrderSeed>>;
+  candidates: Readonly<Record<FinalCandidateOptionId, FinalCandidateSeed>>;
+  calibrationOptions: Readonly<
+    Record<FinalCalibrationOptionId, string>
+  >;
 };
 
 function makeFinalGroupQuestions(
   group: FinalGroup,
   seed: FinalGroupSeed,
 ): QuestionNode[] {
-  const scoredQuestions = seed.questions.map((questionSeed, index) => {
-    const ordinal = index + 1;
-    const isLast = ordinal === seed.questions.length;
-    const id = `Q_FINAL_GROUP_${group}_${ordinal}`;
-    const nextQuestionId = isLast
-      ? undefined
-      : `Q_FINAL_GROUP_${group}_${ordinal + 1}`;
+  const consistencyGroupId = `FINAL_GROUP_${group}`;
+  const candidateOption = (candidateId: FinalCandidateOptionId): OptionSeed => {
+    const candidate = seed.candidates[candidateId];
+    return {
+      title: candidate.title,
+      text: candidate.text,
+      nextQuestionId: `Q_FINAL_GROUP_${group}_CAL_${candidateId}`,
+      typeHintId: candidate.resultTypeId,
+      internalNote: `candidate=${candidate.resultTypeId}`,
+    };
+  };
+  const candidateQuestion = makeQuestion({
+    id: `Q_FINAL_GROUP_${group}_1`,
+    question:
+      "在日常生活中，下列哪一种状态最能代表你最核心、最不假思索的心理本能与安全感来源？",
+    a: candidateOption("A"),
+    b: candidateOption("B"),
+    c: candidateOption("C"),
+    d: candidateOption("D"),
+    stage: "calibration",
+    consistencyGroupId,
+    internalNote: `Final group ${group}; candidate question`,
+  });
+
+  const calibrationQuestions = (
+    ["A", "B", "C", "D"] as const
+  ).map((candidateId) => {
+    const candidate = seed.candidates[candidateId];
+    const calibrationOption = (
+      optionId: FinalCalibrationOptionId,
+    ): OptionSeed => ({
+      title: seed.calibrationOptions[optionId],
+      terminal: true,
+      calibrationTypeId: candidate.resultTypeId,
+      requiresRetest: optionId !== candidate.calibrationAnswer,
+      internalNote:
+        optionId === candidate.calibrationAnswer
+          ? `calibration-pass=${candidate.resultTypeId}`
+          : `calibration-retest=${candidate.resultTypeId}`,
+    });
     return makeQuestion({
-      id,
-      question: questionSeed.question,
-      a: { title: questionSeed.a, nextQuestionId },
-      b: { title: questionSeed.b, nextQuestionId },
+      id: `Q_FINAL_GROUP_${group}_CAL_${candidateId}`,
+      question: "【潜意识校对】下列哪一组更令你不适？",
+      a: calibrationOption("A"),
+      b: calibrationOption("B"),
       stage: "calibration",
-      dynamicRoute: isLast ? "final-majority" : undefined,
-      dynamicNextQuestionIds: isLast
-        ? [
-            `Q_FINAL_GROUP_${group}_ORDER_A`,
-            `Q_FINAL_GROUP_${group}_ORDER_B`,
-          ]
-        : undefined,
-      internalNote: `Final group ${group}; score question ${ordinal}`,
+      consistencyGroupId,
+      internalNote: `Final group ${group}; candidate=${candidate.resultTypeId}; calibration=${candidate.calibrationAnswer}`,
     });
   });
 
-  const orderQuestions = (["A", "B"] as const).map((branch) => {
-    const order = seed.orders[branch];
-    return makeQuestion({
-      id: `Q_FINAL_GROUP_${group}_ORDER_${branch}`,
-      question: "填空题：XX是服务于XX",
-      a: {
-        title: `${order.firstPhrase}是服务于${order.secondPhrase}`,
-        terminal: true,
-        calibrationTypeId: order.results.A,
-      },
-      b: {
-        title: `${order.secondPhrase}是服务于${order.firstPhrase}`,
-        terminal: true,
-        calibrationTypeId: order.results.B,
-      },
-      stage: "calibration",
-      internalNote: `Final group ${group}; majority branch ${branch}`,
-    });
-  });
-
-  return [...scoredQuestions, ...orderQuestions];
+  return [candidateQuestion, ...calibrationQuestions];
 }
 
 const firstRoundScoreQuestions = makeFirstRoundScoreQuestions();
@@ -328,147 +342,131 @@ const secondRoundNodes = firstRoundDeityIds.flatMap((firstWinnerId) => [
 
 const finalGroupSeeds: Readonly<Record<FinalGroup, FinalGroupSeed>> = {
   1: {
-    questions: [
-      {
-        question: "哪一个对你更重要？",
-        a: "体验享乐",
-        b: "协调规划到完成任务",
-      },
-      {
-        question: "哪一个对你更重要？",
-        a: "倾听内心的喜好和感受",
-        b: "想象预测",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "细菌病毒或噩运缠身",
-        b: "情绪崩溃失控",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "加班到没有个人生活",
-        b: "喧闹嘈杂到无法思考",
-      },
-    ],
-    orders: {
+    candidates: {
       A: {
-        firstPhrase: "倾听内心的喜好和感受",
-        secondPhrase: "体验享乐",
-        results: { A: "ESFP", B: "ISFP" },
+        title: "追求行动与体验享乐",
+        text: "极度看重当下的真实感知、刺激与回应，本能地拥抱现实与行动。",
+        resultTypeId: "ESFP",
+        calibrationAnswer: "A",
       },
       B: {
-        firstPhrase: "想象预测",
-        secondPhrase: "协调规划到完成任务",
-        results: { A: "ENTJ", B: "INTJ" },
+        title: "追求价值与真我契合",
+        text: "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。",
+        resultTypeId: "ISFP",
+        calibrationAnswer: "A",
       },
+      C: {
+        title: "追求规划与任务完成",
+        text: "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。",
+        resultTypeId: "ENTJ",
+        calibrationAnswer: "B",
+      },
+      D: {
+        title: "追求想象与洞察预测",
+        text: "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。",
+        resultTypeId: "INTJ",
+        calibrationAnswer: "B",
+      },
+    },
+    calibrationOptions: {
+      A: "噩运缠身/加班到没有个人生活",
+      B: "情绪崩溃失控/喧闹嘈杂到无法思考",
     },
   },
   2: {
-    questions: [
-      {
-        question: "哪一个对你更重要？",
-        a: "体验享乐",
-        b: "肯定他人并与之共情",
-      },
-      {
-        question: "哪一个对你更重要？",
-        a: "推敲命名达成深度理解",
-        b: "想象预测",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "细菌病毒或噩运缠身",
-        b: "被指责或质疑“逻辑不通”",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "高强度令人窒息的社交",
-        b: "喧闹嘈杂到无法思考",
-      },
-    ],
-    orders: {
+    candidates: {
       A: {
-        firstPhrase: "推敲命名达成深度理解",
-        secondPhrase: "体验享乐",
-        results: { A: "ESTP", B: "ISTP" },
+        title: "追求行动与体验享乐",
+        text: "极度看重当下的真实感知与快速反应，本能地拥抱现实、解决眼前的危机。",
+        resultTypeId: "ESTP",
+        calibrationAnswer: "A",
       },
       B: {
-        firstPhrase: "想象预测",
-        secondPhrase: "肯定他人并与之共情",
-        results: { A: "ENFJ", B: "INFJ" },
+        title: "追求解构与逻辑自洽",
+        text: "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。",
+        resultTypeId: "ISTP",
+        calibrationAnswer: "A",
       },
+      C: {
+        title: "追求道德与他人共情",
+        text: "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。",
+        resultTypeId: "ENFJ",
+        calibrationAnswer: "B",
+      },
+      D: {
+        title: "追求想象与洞察预测",
+        text: "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。",
+        resultTypeId: "INFJ",
+        calibrationAnswer: "B",
+      },
+    },
+    calibrationOptions: {
+      A: "噩运缠身/高强度令人窒息的社交",
+      B: "被指责或质疑“逻辑不通”/喧闹嘈杂到无法思考",
     },
   },
   3: {
-    questions: [
-      {
-        question: "哪一个对你更重要？",
-        a: "奇思妙想到创意涌现",
-        b: "协调规划到完成任务",
-      },
-      {
-        question: "哪一个对你更重要？",
-        a: "倾听内心的喜好和感受",
-        b: "验证复盘",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "机械重复的日常工作",
-        b: "情绪崩溃失控",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "加班到没有个人生活",
-        b: "混乱",
-      },
-    ],
-    orders: {
+    candidates: {
       A: {
-        firstPhrase: "倾听内心的喜好和感受",
-        secondPhrase: "奇思妙想到创意涌现",
-        results: { A: "ENFP", B: "INFP" },
+        title: "追求创意与奇思妙想",
+        text: "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。",
+        resultTypeId: "ENFP",
+        calibrationAnswer: "A",
       },
       B: {
-        firstPhrase: "验证复盘",
-        secondPhrase: "协调规划到完成任务",
-        results: { A: "ESTJ", B: "ISTJ" },
+        title: "追求价值与真我契合",
+        text: "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。",
+        resultTypeId: "INFP",
+        calibrationAnswer: "A",
       },
+      C: {
+        title: "追求规划与任务完成",
+        text: "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。",
+        resultTypeId: "ESTJ",
+        calibrationAnswer: "B",
+      },
+      D: {
+        title: "追求安全与验证复盘",
+        text: "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。",
+        resultTypeId: "ISTJ",
+        calibrationAnswer: "B",
+      },
+    },
+    calibrationOptions: {
+      A: "机械重复的日常工作/加班到没有个人生活",
+      B: "情绪崩溃失控/混乱",
     },
   },
   4: {
-    questions: [
-      {
-        question: "哪一个对你更重要？",
-        a: "奇思妙想到创意涌现",
-        b: "肯定他人并与之共情",
-      },
-      {
-        question: "哪一个对你更重要？",
-        a: "推敲命名达成深度理解",
-        b: "验证复盘",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "机械重复的日常工作",
-        b: "被指责或质疑“逻辑不通”",
-      },
-      {
-        question: "哪一个更令你不适？",
-        a: "高强度令人窒息的社交",
-        b: "混乱",
-      },
-    ],
-    orders: {
+    candidates: {
       A: {
-        firstPhrase: "推敲命名达成深度理解",
-        secondPhrase: "奇思妙想到创意涌现",
-        results: { A: "ENTP", B: "INTP" },
+        title: "追求创意与奇思妙想",
+        text: "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。",
+        resultTypeId: "ENTP",
+        calibrationAnswer: "A",
       },
       B: {
-        firstPhrase: "验证复盘",
-        secondPhrase: "肯定他人并与之共情",
-        results: { A: "ESFJ", B: "ISFJ" },
+        title: "追求解构与逻辑自洽",
+        text: "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。",
+        resultTypeId: "INTP",
+        calibrationAnswer: "A",
       },
+      C: {
+        title: "追求道德与他人共情",
+        text: "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。",
+        resultTypeId: "ESFJ",
+        calibrationAnswer: "B",
+      },
+      D: {
+        title: "追求安全与验证复盘",
+        text: "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。",
+        resultTypeId: "ISFJ",
+        calibrationAnswer: "B",
+      },
+    },
+    calibrationOptions: {
+      A: "机械重复的日常工作/高强度令人窒息的社交",
+      B: "被指责或质疑“逻辑不通”/混乱",
     },
   },
 };
