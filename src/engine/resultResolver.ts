@@ -69,7 +69,7 @@ export function resolveCalibrationResult(
     calibrationMatched: !needsRetest,
     needsRetest,
     retestReason: explicitRejection
-      ? "最终校准未通过：这条深层欲望描述与你不符。"
+      ? "潜意识校对失败，请遵循本心，返回第三轮题目重选。"
       : conflictsWithVotes
         ? "最终校准与前两条候选线索不一致，建议按第一反应重新测试。"
         : undefined,
