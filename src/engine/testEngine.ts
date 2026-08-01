@@ -352,6 +352,36 @@ export function goBackToQuestion(
   };
 }
 
+/** Keeps both scored rounds and clears only the failed third-round choices. */
+export function retryFinalRound(
+  session: TestSession,
+  questions: readonly QuestionNode[] = demoQuestions,
+): TestSession {
+  const questionMap = createQuestionMap(questions);
+  const finalChoiceEntry = session.history.find((entry) => {
+    const question = questionMap.get(entry.questionId);
+    return Boolean(question?.options[entry.selectedOptionId]?.typeHintId);
+  });
+
+  if (!finalChoiceEntry) {
+    throw new TestEngineError(
+      "INVALID_BACK_TARGET",
+      "当前答题路径中不存在可重选的第三轮题目。",
+    );
+  }
+
+  return {
+    ...session,
+    status: "in-progress",
+    currentQuestionId: finalChoiceEntry.questionId,
+    history: truncateHistoryAtQuestion(
+      session.history,
+      finalChoiceEntry.questionId,
+    ),
+    completedAt: undefined,
+  };
+}
+
 export function getRecordedAnswer(
   session: TestSession,
   questionId: string = session.currentQuestionId,
