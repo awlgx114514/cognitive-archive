@@ -22,6 +22,7 @@ import {
 import { analyzeConfiguredPaths } from "./pathAnalysis";
 import { calculateResult } from "./resultResolver";
 import { validateDemoContent } from "./validation";
+import * as testEngine from "./testEngine";
 
 type FirstDeityId = 1 | 2 | 3 | 4;
 type SecondDeityId = 5 | 6 | 7 | 8;
@@ -508,6 +509,37 @@ describe("eighth-edition scored question bank", () => {
     expect(result.retestReason).toBe(
       "潜意识校对失败，请遵循本心，返回第三轮题目重选。",
     );
+  });
+
+  it("returns a failed calibration to the same third-round choice without clearing earlier rounds", () => {
+    const completed = completedPath(1, 5, "A", "B");
+    const retryFinalRound = (
+      testEngine as typeof testEngine & {
+        retryFinalRound?: (
+          session: TestSession,
+          questionBank: typeof questions,
+        ) => TestSession;
+      }
+    ).retryFinalRound;
+
+    expect(retryFinalRound).toBeTypeOf("function");
+    if (!retryFinalRound) return;
+
+    const retried = retryFinalRound(completed, questions);
+
+    expect(retried.status).toBe("in-progress");
+    expect(retried.currentQuestionId).toBe("Q_FINAL_GROUP_1_1");
+    expect(retried.history).toHaveLength(18);
+    expect(retried.history.at(-1)?.questionId).toBe("Q_R2_F1_SCORE_8");
+    expect(retried.completedAt).toBeUndefined();
+
+    const changedCandidate = answerQuestion(retried, "D", {
+      questions,
+      config: testConfig,
+      answeredAt: 999,
+    }).session;
+    expect(changedCandidate.history).toHaveLength(19);
+    expect(changedCandidate.currentQuestionId).toBe("Q_FINAL_GROUP_1_CAL_D");
   });
 });
 
