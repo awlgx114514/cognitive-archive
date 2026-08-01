@@ -15,6 +15,7 @@ import {
   getRecordedAnswer,
   goBackOneStep,
   restartTestSession,
+  retryFinalRound as retryFinalRoundSession,
   restoreTestSession,
   startTestSession,
   truncateHistoryAtQuestion,
@@ -38,6 +39,7 @@ export type UseTestSessionValue = {
   error: string | null;
   start: () => void;
   restart: () => void;
+  retryFinalRound: () => void;
   answer: (optionId: AnswerOptionId) => boolean;
   back: () => void;
   reset: () => void;
@@ -126,6 +128,12 @@ export function useTestSession(): UseTestSessionValue {
     submissionLockedRef.current = false;
     setError(null);
     commitSession(restartTestSession());
+  }, [commitSession]);
+
+  const retryFinalRound = useCallback(() => {
+    submissionLockedRef.current = false;
+    setError(null);
+    commitSession(retryFinalRoundSession(sessionRef.current, questions));
   }, [commitSession]);
 
   const answer = useCallback(
@@ -268,6 +276,7 @@ export function useTestSession(): UseTestSessionValue {
     error: error ?? resultError,
     start,
     restart,
+    retryFinalRound,
     answer,
     back,
     reset,
