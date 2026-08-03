@@ -30,7 +30,7 @@ export const deityProfiles: Readonly<Record<DeityId, DeityProfile>> = {
   3: {
     id: 3,
     name: "司岁帝君",
-    description: "执笔万纪万象与铭记之神",
+    description: "执笔万象万纪与箴言之神",
     desire: "验证复盘",
     functionKey: "Si",
   },
