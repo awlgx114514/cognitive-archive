@@ -47,6 +47,7 @@ export type QuestionStage =
 export type DynamicRouteKind =
   | "first-round-score"
   | "second-round-score"
+  | "final-answer-pair"
   | "final-majority";
 
 export type QuestionNode = {
