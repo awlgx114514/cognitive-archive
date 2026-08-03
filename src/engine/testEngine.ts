@@ -360,7 +360,10 @@ export function retryFinalRound(
   const questionMap = createQuestionMap(questions);
   const finalChoiceEntry = session.history.find((entry) => {
     const question = questionMap.get(entry.questionId);
-    return Boolean(question?.options[entry.selectedOptionId]?.typeHintId);
+    return Boolean(
+      question?.stage === "calibration" &&
+        /^Q_FINAL_GROUP_[1-4]_1$/.test(question.id),
+    );
   });
 
   if (!finalChoiceEntry) {
