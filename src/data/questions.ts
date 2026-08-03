@@ -259,21 +259,19 @@ function makeSecondRoundSelection(
 }
 
 type FinalGroup = 1 | 2 | 3 | 4;
-type FinalCandidateOptionId = "A" | "B" | "C" | "D";
-type FinalCalibrationOptionId = "A" | "B";
 
-type FinalCandidateSeed = {
-  title: string;
-  text: string;
-  resultTypeId: string;
-  calibrationAnswer: FinalCalibrationOptionId;
+type FinalBinarySeed = BinaryQuestionSeed & {
+  resultTypeIds?: readonly [string, string];
 };
 
 type FinalGroupSeed = {
-  candidates: Readonly<Record<FinalCandidateOptionId, FinalCandidateSeed>>;
-  calibrationOptions: Readonly<
-    Record<FinalCalibrationOptionId, string>
-  >;
+  first: FinalBinarySeed;
+  second: FinalBinarySeed;
+  directA: FinalBinarySeed;
+  directB: FinalBinarySeed;
+  mixed: FinalBinarySeed;
+  mixedA: FinalBinarySeed;
+  mixedB: FinalBinarySeed;
 };
 
 function makeFinalGroupQuestions(
@@ -281,57 +279,78 @@ function makeFinalGroupQuestions(
   seed: FinalGroupSeed,
 ): QuestionNode[] {
   const consistencyGroupId = `FINAL_GROUP_${group}`;
-  const candidateOption = (candidateId: FinalCandidateOptionId): OptionSeed => {
-    const candidate = seed.candidates[candidateId];
-    return {
-      title: candidate.title,
-      text: candidate.text,
-      nextQuestionId: `Q_FINAL_GROUP_${group}_CAL_${candidateId}`,
-      typeHintId: candidate.resultTypeId,
-      internalNote: `candidate=${candidate.resultTypeId}`,
-    };
-  };
-  const candidateQuestion = makeQuestion({
-    id: `Q_FINAL_GROUP_${group}_1`,
-    question:
-      "在日常生活中，下列哪一种状态最能代表你最核心、最不假思索的心理本能与安全感来源？",
-    a: candidateOption("A"),
-    b: candidateOption("B"),
-    c: candidateOption("C"),
-    d: candidateOption("D"),
-    stage: "calibration",
+  const prefix = `Q_FINAL_GROUP_${group}`;
+  const common = {
+    stage: "calibration" as const,
     consistencyGroupId,
-    internalNote: `Final group ${group}; candidate question`,
+  };
+  const terminalOption = (
+    title: string,
+    resultTypeId: string,
+  ): OptionSeed => ({
+    title,
+    terminal: true,
+    calibrationTypeId: resultTypeId,
+    internalNote: `result=${resultTypeId}`,
   });
-
-  const calibrationQuestions = (
-    ["A", "B", "C", "D"] as const
-  ).map((candidateId) => {
-    const candidate = seed.candidates[candidateId];
-    const calibrationOption = (
-      optionId: FinalCalibrationOptionId,
-    ): OptionSeed => ({
-      title: seed.calibrationOptions[optionId],
-      terminal: true,
-      calibrationTypeId: candidate.resultTypeId,
-      requiresRetest: optionId !== candidate.calibrationAnswer,
-      internalNote:
-        optionId === candidate.calibrationAnswer
-          ? `calibration-pass=${candidate.resultTypeId}`
-          : `calibration-retest=${candidate.resultTypeId}`,
-    });
+  const terminalQuestion = (
+    suffix: "3_1" | "3_2" | "4_1" | "4_2",
+    terminalSeed: FinalBinarySeed,
+  ): QuestionNode => {
+    const resultTypeIds = terminalSeed.resultTypeIds;
+    if (!resultTypeIds) {
+      throw new Error(`Final group ${group} ${suffix} is missing result mappings.`);
+    }
     return makeQuestion({
-      id: `Q_FINAL_GROUP_${group}_CAL_${candidateId}`,
-      question: "【潜意识校对】下列哪一组更令你不适？",
-      a: calibrationOption("A"),
-      b: calibrationOption("B"),
-      stage: "calibration",
-      consistencyGroupId,
-      internalNote: `Final group ${group}; candidate=${candidate.resultTypeId}; calibration=${candidate.calibrationAnswer}`,
+      id: `${prefix}_${suffix}`,
+      question: terminalSeed.question,
+      a: terminalOption(terminalSeed.a, resultTypeIds[0]),
+      b: terminalOption(terminalSeed.b, resultTypeIds[1]),
+      ...common,
+      internalNote: `Final group ${group}; terminal=${suffix}`,
     });
+  };
+
+  const first = makeQuestion({
+    id: `Q_FINAL_GROUP_${group}_1`,
+    question: seed.first.question,
+    a: { title: seed.first.a, nextQuestionId: `${prefix}_2` },
+    b: { title: seed.first.b, nextQuestionId: `${prefix}_2` },
+    ...common,
+    internalNote: `Final group ${group}; answer-pair=first`,
+  });
+  const second = makeQuestion({
+    id: `${prefix}_2`,
+    question: seed.second.question,
+    a: { title: seed.second.a },
+    b: { title: seed.second.b },
+    dynamicRoute: "final-answer-pair",
+    dynamicNextQuestionIds: [
+      `${prefix}_3_1`,
+      `${prefix}_3_2`,
+      `${prefix}_3_3`,
+    ],
+    ...common,
+    internalNote: `Final group ${group}; answer-pair=second; aa→3.1; bb→3.2; ab/ba→3.3`,
+  });
+  const mixed = makeQuestion({
+    id: `${prefix}_3_3`,
+    question: seed.mixed.question,
+    a: { title: seed.mixed.a, nextQuestionId: `${prefix}_4_1` },
+    b: { title: seed.mixed.b, nextQuestionId: `${prefix}_4_2` },
+    ...common,
+    internalNote: `Final group ${group}; mixed branch`,
   });
 
-  return [candidateQuestion, ...calibrationQuestions];
+  return [
+    first,
+    second,
+    terminalQuestion("3_1", seed.directA),
+    terminalQuestion("3_2", seed.directB),
+    mixed,
+    terminalQuestion("4_1", seed.mixedA),
+    terminalQuestion("4_2", seed.mixedB),
+  ];
 }
 
 const firstRoundScoreQuestions = makeFirstRoundScoreQuestions();
@@ -342,132 +361,40 @@ const secondRoundNodes = firstRoundDeityIds.flatMap((firstWinnerId) => [
 
 const finalGroupSeeds: Readonly<Record<FinalGroup, FinalGroupSeed>> = {
   1: {
-    candidates: {
-      A: {
-        title: "追求行动与体验享乐",
-        text: "极度看重当下的真实感知、刺激与回应，本能地拥抱现实与行动。",
-        resultTypeId: "ESFP",
-        calibrationAnswer: "A",
-      },
-      B: {
-        title: "追求价值与真我契合",
-        text: "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。",
-        resultTypeId: "ISFP",
-        calibrationAnswer: "A",
-      },
-      C: {
-        title: "追求规划与任务完成",
-        text: "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。",
-        resultTypeId: "ENTJ",
-        calibrationAnswer: "B",
-      },
-      D: {
-        title: "追求想象与洞察预测",
-        text: "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。",
-        resultTypeId: "INTJ",
-        calibrationAnswer: "B",
-      },
-    },
-    calibrationOptions: {
-      A: "噩运缠身/加班到没有个人生活",
-      B: "情绪崩溃失控/喧闹嘈杂到无法思考",
-    },
+    first: { question: "最接近你最核心的本能的是？", a: "倾听内心与体验享乐", b: "执行规划与想象洞察" },
+    second: { question: "令你更恐惧的一组是？", a: "未来噩运缠身＆工作重负到过载", b: "情绪崩溃失控＆嘈杂到大脑宕机" },
+    directA: { question: "符合你内心过程的描述是？", a: "倾听内心是为了体验享乐", b: "参与体验是为了内心价值", resultTypeIds: ["ESFP", "ISFP"] },
+    directB: { question: "符合你内心过程的描述是？", a: "想象洞察是为了完成任务", b: "规划工作是为了洞察预测", resultTypeIds: ["ENTJ", "INTJ"] },
+    mixed: { question: "最接近你最核心的本能的是？", a: "体验享乐与执行规划", b: "倾听内心与想象洞察" },
+    mixedA: { question: "令你更恐惧的是？", a: "未来噩运缠身", b: "情绪崩溃失控", resultTypeIds: ["ESFP", "ENTJ"] },
+    mixedB: { question: "令你更恐惧的是？", a: "工作重负到过载", b: "嘈杂到大脑宕机", resultTypeIds: ["ISFP", "INTJ"] },
   },
   2: {
-    candidates: {
-      A: {
-        title: "追求行动与体验享乐",
-        text: "极度看重当下的真实感知与快速反应，本能地拥抱现实、解决眼前的危机。",
-        resultTypeId: "ESTP",
-        calibrationAnswer: "A",
-      },
-      B: {
-        title: "追求解构与逻辑自洽",
-        text: "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。",
-        resultTypeId: "ISTP",
-        calibrationAnswer: "A",
-      },
-      C: {
-        title: "追求道德与他人共情",
-        text: "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。",
-        resultTypeId: "ENFJ",
-        calibrationAnswer: "B",
-      },
-      D: {
-        title: "追求想象与洞察预测",
-        text: "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。",
-        resultTypeId: "INFJ",
-        calibrationAnswer: "B",
-      },
-    },
-    calibrationOptions: {
-      A: "噩运缠身/高强度令人窒息的社交",
-      B: "被指责或质疑“逻辑不通”/喧闹嘈杂到无法思考",
-    },
+    first: { question: "最接近你最核心的本能的是？", a: "拆解逻辑与体验享乐", b: "想象洞察与肯定赞美他人" },
+    second: { question: "令你更恐惧的一组是？", a: "未来噩运缠身＆社交过载", b: "说出伤害他人的真话＆嘈杂到大脑宕机" },
+    directA: { question: "符合你内心过程的描述是？", a: "拆解逻辑是为了体验享受", b: "参与体验是为了理解底层原理", resultTypeIds: ["ESTP", "ISTP"] },
+    directB: { question: "符合你内心过程的描述是？", a: "想象洞察是为了与他人联结", b: "肯定赞美他人是为了洞察预测", resultTypeIds: ["ENFJ", "INFJ"] },
+    mixed: { question: "最接近你最核心的本能的是？", a: "体验享乐与肯定赞美他人", b: "拆解逻辑与想象洞察" },
+    mixedA: { question: "令你更恐惧的是？", a: "未来噩运缠身", b: "说出伤害他人的真话", resultTypeIds: ["ESTP", "ENFJ"] },
+    mixedB: { question: "令你更恐惧的是？", a: "社交过载", b: "嘈杂到大脑宕机", resultTypeIds: ["ISTP", "INFJ"] },
   },
   3: {
-    candidates: {
-      A: {
-        title: "追求创意与奇思妙想",
-        text: "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。",
-        resultTypeId: "ENFP",
-        calibrationAnswer: "A",
-      },
-      B: {
-        title: "追求价值与真我契合",
-        text: "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。",
-        resultTypeId: "INFP",
-        calibrationAnswer: "A",
-      },
-      C: {
-        title: "追求规划与任务完成",
-        text: "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。",
-        resultTypeId: "ESTJ",
-        calibrationAnswer: "B",
-      },
-      D: {
-        title: "追求安全与验证复盘",
-        text: "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。",
-        resultTypeId: "ISTJ",
-        calibrationAnswer: "B",
-      },
-    },
-    calibrationOptions: {
-      A: "机械重复的日常工作/加班到没有个人生活",
-      B: "情绪崩溃失控/混乱",
-    },
+    first: { question: "最接近你最核心的本能的是？", a: "倾听内心与灵感涌现", b: "执行规划与验证复盘" },
+    second: { question: "令你更恐惧的一组是？", a: "重复机械的日常工作＆工作重负到过载", b: "情绪崩溃失控＆混乱" },
+    directA: { question: "符合你内心过程的描述是？", a: "倾听内心是为了灵感涌现", b: "灵感涌现是为了内心价值", resultTypeIds: ["ENFP", "INFP"] },
+    directB: { question: "符合你内心过程的描述是？", a: "验证复盘是为了完成任务", b: "效率规划是为了验证复盘", resultTypeIds: ["ESTJ", "ISTJ"] },
+    mixed: { question: "最接近你最核心的本能的是？", a: "灵感涌现与执行规划", b: "倾听内心与验证复盘" },
+    mixedA: { question: "令你更恐惧的是？", a: "重复机械的日常工作", b: "情绪崩溃失控", resultTypeIds: ["ENFP", "ESTJ"] },
+    mixedB: { question: "令你更恐惧的是？", a: "工作重负到过载", b: "混乱", resultTypeIds: ["INFP", "ISTJ"] },
   },
   4: {
-    candidates: {
-      A: {
-        title: "追求创意与奇思妙想",
-        text: "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。",
-        resultTypeId: "ENTP",
-        calibrationAnswer: "A",
-      },
-      B: {
-        title: "追求解构与逻辑自洽",
-        text: "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。",
-        resultTypeId: "INTP",
-        calibrationAnswer: "A",
-      },
-      C: {
-        title: "追求道德与他人共情",
-        text: "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。",
-        resultTypeId: "ESFJ",
-        calibrationAnswer: "B",
-      },
-      D: {
-        title: "追求安全与验证复盘",
-        text: "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。",
-        resultTypeId: "ISFJ",
-        calibrationAnswer: "B",
-      },
-    },
-    calibrationOptions: {
-      A: "机械重复的日常工作/高强度令人窒息的社交",
-      B: "被指责或质疑“逻辑不通”/混乱",
-    },
+    first: { question: "最接近你最核心的本能的是？", a: "拆解逻辑与灵感涌现", b: "肯定赞美他人与验证复盘" },
+    second: { question: "令你更恐惧的一组是？", a: "重复机械的日常工作＆社交过载", b: "说出伤害他人的真话＆混乱" },
+    directA: { question: "符合你内心过程的描述是？", a: "拆解逻辑是为了灵感涌现", b: "灵感涌现是为了理解底层原理", resultTypeIds: ["ENTP", "INTP"] },
+    directB: { question: "符合你内心过程的描述是？", a: "验证复盘是为了联结他人", b: "赞美肯定他人是为了验证复盘", resultTypeIds: ["ESFJ", "ISFJ"] },
+    mixed: { question: "最接近你最核心的本能的是？", a: "灵感涌现与赞美肯定他人", b: "拆解逻辑与验证复盘" },
+    mixedA: { question: "令你更恐惧的是？", a: "重复机械的日常工作", b: "说出伤害他人的真话", resultTypeIds: ["ENTP", "ESFJ"] },
+    mixedB: { question: "令你更恐惧的是？", a: "社交过载", b: "混乱", resultTypeIds: ["INTP", "ISFJ"] },
   },
 };
 
