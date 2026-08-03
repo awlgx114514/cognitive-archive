@@ -210,6 +210,29 @@ function resolveFinalBranch(
   return firstWinner === 1 || firstWinner === 2 ? "A" : "B";
 }
 
+function resolveFinalAnswerPair(
+  history: readonly HistoryEntry[],
+  group: 1 | 2 | 3 | 4,
+): string {
+  const prefix = `Q_FINAL_GROUP_${group}`;
+  const firstAnswer = history.find(
+    (entry) => entry.questionId === `${prefix}_1`,
+  )?.selectedOptionId;
+  const secondAnswer = history.find(
+    (entry) => entry.questionId === `${prefix}_2`,
+  )?.selectedOptionId;
+
+  if (
+    (firstAnswer !== "A" && firstAnswer !== "B") ||
+    (secondAnswer !== "A" && secondAnswer !== "B")
+  ) {
+    throw new Error(`Final group ${group} requires two A/B answers.`);
+  }
+  if (firstAnswer === "A" && secondAnswer === "A") return `${prefix}_3_1`;
+  if (firstAnswer === "B" && secondAnswer === "B") return `${prefix}_3_2`;
+  return `${prefix}_3_3`;
+}
+
 export function resolveDynamicRoute(
   route: DynamicRouteKind,
   history: readonly HistoryEntry[],
@@ -232,6 +255,15 @@ export function resolveDynamicRoute(
     const secondWinner = resolveRoundWinner(history, 2)
       .winnerId as SecondRoundDeityId;
     return `Q_FINAL_GROUP_${finalGroupForDeities(firstWinner, secondWinner)}_1`;
+  }
+
+  if (route === "final-answer-pair") {
+    const finalMatch = /^Q_FINAL_GROUP_([1-4])_2$/.exec(currentQuestionId);
+    if (!finalMatch?.[1]) {
+      throw new Error(`Cannot resolve final answer pair from ${currentQuestionId}.`);
+    }
+    const group = Number(finalMatch[1]) as 1 | 2 | 3 | 4;
+    return resolveFinalAnswerPair(history, group);
   }
 
   const finalMatch = /^Q_FINAL_GROUP_([1-4])_4$/.exec(currentQuestionId);
