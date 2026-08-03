@@ -110,32 +110,30 @@ function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
 function completedPath(
   firstDeityId: FirstDeityId,
   secondDeityId: SecondDeityId,
-  finalCandidateOptionId: "A" | "B" | "C" | "D",
-  finalCalibrationOptionId: "A" | "B",
+  finalAnswerIds: readonly AnswerOptionId[],
 ): TestSession {
   return answerPath([
     firstSelectionAnswers[firstDeityId],
     ...firstWinnerAnswers[firstDeityId],
     secondSelectionAnswers[secondDeityId],
     ...secondWinnerAnswers[secondDeityId],
-    finalCandidateOptionId,
-    finalCalibrationOptionId,
+    ...finalAnswerIds,
   ]);
 }
 
-describe("eighth-edition scored question bank", () => {
-  it("is structurally valid and every complete route contains 20 answers", () => {
+describe("ninth-edition scored question bank", () => {
+  it("is structurally valid and complete routes contain 21 or 22 answers", () => {
     const report = validateDemoContent();
     const analysis = analyzeConfiguredPaths();
 
     expect(report.valid).toBe(true);
     expect(report.errors).toHaveLength(0);
     expect(analysis.incompletePaths).toHaveLength(0);
-    expect(analysis.shortestPathLength).toBe(20);
-    expect(analysis.longestPathLength).toBe(20);
-    expect(testConfig.minimumPathLength).toBe(20);
-    expect(testConfig.maximumPathLength).toBe(20);
-    expect(testConfig.storageVersion).toBe("11.0.0");
+    expect(analysis.shortestPathLength).toBe(21);
+    expect(analysis.longestPathLength).toBe(22);
+    expect(testConfig.minimumPathLength).toBe(21);
+    expect(testConfig.maximumPathLength).toBe(22);
+    expect(testConfig.storageVersion).toBe("12.0.0");
   });
 
   it("starts each round with the requested four deity cards", () => {
@@ -147,7 +145,7 @@ describe("eighth-edition scored question bank", () => {
     expect(firstSelection?.options.A.nextQuestionId).toBe("Q_R1_SCORE_1");
     expect(firstSelection?.options.C?.title).toBe("司岁帝君");
     expect(firstSelection?.options.C?.text).toBe(
-      "执笔万纪万象与铭记之神",
+      "执笔万象万纪与箴言之神",
     );
     expect(firstSelection?.options.D?.title).toBe("太虚灵官");
     expect(firstSelection?.options.D?.nextQuestionId).toBe("Q_R1_SCORE_1");
@@ -176,7 +174,7 @@ describe("eighth-edition scored question bank", () => {
     );
   });
 
-  it("contains the exact eighth-edition first and second round wording", () => {
+  it("contains the exact ninth-edition first and second round wording", () => {
     const expectedFirstRound = [
       ["健康无恙时你更喜欢？", "身体舒适", "脑嗨"],
       [
@@ -260,7 +258,7 @@ describe("eighth-edition scored question bank", () => {
     expect(getQuestionById("Q_R1_SCORE_1")?.options.A.text).toBe("");
     expect(deityProfiles[2].desire).toBe("奇思妙想到创意涌现");
     expect(deityProfiles[3].name).toBe("司岁帝君");
-    expect(deityProfiles[3].description).toBe("执笔万纪万象与铭记之神");
+    expect(deityProfiles[3].description).toBe("执笔万象万纪与箴言之神");
     expect(deityProfiles[5].description).toBe(
       "统辖协调规划与法令严正之神",
     );
@@ -274,76 +272,94 @@ describe("eighth-edition scored question bank", () => {
     );
   });
 
-  it("contains the exact eighth-edition two-question final sections", () => {
-    const prompt =
-      "在日常生活中，下列哪一种状态最能代表你最核心、最不假思索的心理本能与安全感来源？";
+  it("contains the exact ninth-edition adaptive final-round wording", () => {
     const expectedGroups = {
       1: [
-        ["追求行动与体验享乐", "极度看重当下的真实感知、刺激与回应，本能地拥抱现实与行动。"],
-        ["追求价值与真我契合", "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。"],
-        ["追求规划与任务完成", "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。"],
-        ["追求想象与洞察预测", "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。"],
+        ["最接近你最核心的本能的是？", "倾听内心与体验享乐", "执行规划与想象洞察"],
+        ["令你更恐惧的一组是？", "未来噩运缠身＆工作重负到过载", "情绪崩溃失控＆嘈杂到大脑宕机"],
+        ["符合你内心过程的描述是？", "倾听内心是为了体验享乐", "参与体验是为了内心价值"],
+        ["符合你内心过程的描述是？", "想象洞察是为了完成任务", "规划工作是为了洞察预测"],
+        ["最接近你最核心的本能的是？", "体验享乐与执行规划", "倾听内心与想象洞察"],
+        ["令你更恐惧的是？", "未来噩运缠身", "情绪崩溃失控"],
+        ["令你更恐惧的是？", "工作重负到过载", "嘈杂到大脑宕机"],
       ],
       2: [
-        ["追求行动与体验享乐", "极度看重当下的真实感知与快速反应，本能地拥抱现实、解决眼前的危机。"],
-        ["追求解构与逻辑自洽", "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。"],
-        ["追求道德与他人共情", "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。"],
-        ["追求想象与洞察预测", "极度看重趋势与终极意义，本能地在脑海里捕捉事物的抽象规律与未来演化。"],
+        ["最接近你最核心的本能的是？", "拆解逻辑与体验享乐", "想象洞察与肯定赞美他人"],
+        ["令你更恐惧的一组是？", "未来噩运缠身＆社交过载", "说出伤害他人的真话＆嘈杂到大脑宕机"],
+        ["符合你内心过程的描述是？", "拆解逻辑是为了体验享受", "参与体验是为了理解底层原理"],
+        ["符合你内心过程的描述是？", "想象洞察是为了与他人联结", "肯定赞美他人是为了洞察预测"],
+        ["最接近你最核心的本能的是？", "体验享乐与肯定赞美他人", "拆解逻辑与想象洞察"],
+        ["令你更恐惧的是？", "未来噩运缠身", "说出伤害他人的真话"],
+        ["令你更恐惧的是？", "社交过载", "嘈杂到大脑宕机"],
       ],
       3: [
-        ["追求创意与奇思妙想", "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。"],
-        ["追求价值与真我契合", "极度看重内心的真实喜恶、道德与情感纯粹，本能地坚守个人领地。"],
-        ["追求规划与任务完成", "极度看重效率、秩序与结果，本能地想去掌控事态、解决问题。"],
-        ["追求安全与验证复盘", "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。"],
+        ["最接近你最核心的本能的是？", "倾听内心与灵感涌现", "执行规划与验证复盘"],
+        ["令你更恐惧的一组是？", "重复机械的日常工作＆工作重负到过载", "情绪崩溃失控＆混乱"],
+        ["符合你内心过程的描述是？", "倾听内心是为了灵感涌现", "灵感涌现是为了内心价值"],
+        ["符合你内心过程的描述是？", "验证复盘是为了完成任务", "效率规划是为了验证复盘"],
+        ["最接近你最核心的本能的是？", "灵感涌现与执行规划", "倾听内心与验证复盘"],
+        ["令你更恐惧的是？", "重复机械的日常工作", "情绪崩溃失控"],
+        ["令你更恐惧的是？", "工作重负到过载", "混乱"],
       ],
       4: [
-        ["追求创意与奇思妙想", "极度看重可能性与头脑风暴，本能地用新奇想法去挑战固有观念、打破常规。"],
-        ["追求解构与逻辑自洽", "极度看重逻辑的严密与精确，本能地想要把事物的底层运作机制拆解明白。"],
-        ["追求道德与他人共情", "极度看重群体氛围与他人感受，本能地去体贴、照顾周围人的需求。"],
-        ["追求安全与验证复盘", "极度看重细节、既有经验与责任，本能地在熟悉、有秩序的框架里默默守护。"],
+        ["最接近你最核心的本能的是？", "拆解逻辑与灵感涌现", "肯定赞美他人与验证复盘"],
+        ["令你更恐惧的一组是？", "重复机械的日常工作＆社交过载", "说出伤害他人的真话＆混乱"],
+        ["符合你内心过程的描述是？", "拆解逻辑是为了灵感涌现", "灵感涌现是为了理解底层原理"],
+        ["符合你内心过程的描述是？", "验证复盘是为了联结他人", "赞美肯定他人是为了验证复盘"],
+        ["最接近你最核心的本能的是？", "灵感涌现与赞美肯定他人", "拆解逻辑与验证复盘"],
+        ["令你更恐惧的是？", "重复机械的日常工作", "说出伤害他人的真话"],
+        ["令你更恐惧的是？", "社交过载", "混乱"],
       ],
     } as const;
-    const expectedCalibrationOptions = {
-      1: [
-        "噩运缠身/加班到没有个人生活",
-        "情绪崩溃失控/喧闹嘈杂到无法思考",
-      ],
-      2: [
-        "噩运缠身/高强度令人窒息的社交",
-        "被指责或质疑“逻辑不通”/喧闹嘈杂到无法思考",
-      ],
-      3: [
-        "机械重复的日常工作/加班到没有个人生活",
-        "情绪崩溃失控/混乱",
-      ],
-      4: [
-        "机械重复的日常工作/高强度令人窒息的社交",
-        "被指责或质疑“逻辑不通”/混乱",
-      ],
-    } as const;
+    const suffixes = ["1", "2", "3_1", "3_2", "3_3", "4_1", "4_2"] as const;
 
     for (const group of [1, 2, 3, 4] as const) {
-      const candidateQuestion = getQuestionById(`Q_FINAL_GROUP_${group}_1`);
-      expect(candidateQuestion?.shortQuestion).toBe(prompt);
-      expect(["A", "B", "C", "D"].map((optionId) => {
-        const option = candidateQuestion?.options[optionId as AnswerOptionId];
-        return [option?.title, option?.text];
-      })).toEqual(expectedGroups[group]);
-
-      for (const candidate of ["A", "B", "C", "D"] as const) {
-        const calibration = getQuestionById(
-          `Q_FINAL_GROUP_${group}_CAL_${candidate}`,
-        );
-        expect(calibration?.shortQuestion).toBe(
-          "【潜意识校对】下列哪一组更令你不适？",
-        );
-        expect([
-          calibration?.options.A.title,
-          calibration?.options.B.title,
-        ]).toEqual(expectedCalibrationOptions[group]);
-      }
+      expect(
+        suffixes.map((suffix) =>
+          visibleQuestionTuple(`Q_FINAL_GROUP_${group}_${suffix}`),
+        ),
+      ).toEqual(expectedGroups[group]);
     }
   });
+
+  it.each([1, 2, 3, 4] as const)(
+    "routes final group %s from the first two answers exactly as documented",
+    (group) => {
+      const prefix = `Q_FINAL_GROUP_${group}`;
+      const first = getQuestionById(`${prefix}_1`)!;
+      const second = getQuestionById(`${prefix}_2`)!;
+      const deityPairs = {
+        1: [1, 5],
+        2: [1, 6],
+        3: [2, 5],
+        4: [2, 6],
+      } as const;
+      const [firstDeityId, secondDeityId] = deityPairs[group];
+      const prelude = [
+        firstSelectionAnswers[firstDeityId],
+        ...firstWinnerAnswers[firstDeityId],
+        secondSelectionAnswers[secondDeityId],
+        ...secondWinnerAnswers[secondDeityId],
+      ] as const;
+
+      expect(first.options.A.nextQuestionId).toBe(`${prefix}_2`);
+      expect(first.options.B.nextQuestionId).toBe(`${prefix}_2`);
+      expect(second.dynamicRoute).toBe("final-answer-pair");
+
+      expect(answerPath([...prelude, "A", "A"]).currentQuestionId).toBe(
+        `${prefix}_3_1`,
+      );
+      expect(answerPath([...prelude, "B", "B"]).currentQuestionId).toBe(
+        `${prefix}_3_2`,
+      );
+      expect(answerPath([...prelude, "A", "B"]).currentQuestionId).toBe(
+        `${prefix}_3_3`,
+      );
+      expect(answerPath([...prelude, "B", "A"]).currentQuestionId).toBe(
+        `${prefix}_3_3`,
+      );
+    },
+  );
 
   it("does not expose MBTI result hints in any reader-visible question text", () => {
     const personalityCode = /\b(?:ENTJ|INTJ|ESTJ|ISTJ|ENFJ|INFJ|ESFJ|ISFJ|ENTP|INTP|ESTP|ISTP|ENFP|INFP|ESFP|ISFP)\b/;
@@ -458,61 +474,75 @@ describe("eighth-edition scored question bank", () => {
   );
 
   it.each([
-    ["ESFP", 1, 5, "A", "A"],
-    ["ISFP", 1, 5, "B", "A"],
-    ["ENTJ", 1, 5, "C", "B"],
-    ["INTJ", 1, 5, "D", "B"],
-    ["ESTP", 1, 6, "A", "A"],
-    ["ISTP", 1, 6, "B", "A"],
-    ["ENFJ", 1, 6, "C", "B"],
-    ["INFJ", 1, 6, "D", "B"],
-    ["ENFP", 2, 5, "A", "A"],
-    ["INFP", 2, 5, "B", "A"],
-    ["ESTJ", 2, 5, "C", "B"],
-    ["ISTJ", 2, 5, "D", "B"],
-    ["ENTP", 2, 6, "A", "A"],
-    ["INTP", 2, 6, "B", "A"],
-    ["ESFJ", 2, 6, "C", "B"],
-    ["ISFJ", 2, 6, "D", "B"],
+    ["ESFP", 1, 5, ["A", "A", "A"]],
+    ["ISFP", 1, 5, ["A", "A", "B"]],
+    ["ENTJ", 1, 5, ["B", "B", "A"]],
+    ["INTJ", 1, 5, ["B", "B", "B"]],
+    ["ESTP", 1, 6, ["A", "A", "A"]],
+    ["ISTP", 1, 6, ["A", "A", "B"]],
+    ["ENFJ", 1, 6, ["B", "B", "A"]],
+    ["INFJ", 1, 6, ["B", "B", "B"]],
+    ["ENFP", 2, 5, ["A", "A", "A"]],
+    ["INFP", 2, 5, ["A", "A", "B"]],
+    ["ESTJ", 2, 5, ["B", "B", "A"]],
+    ["ISTJ", 2, 5, ["B", "B", "B"]],
+    ["ENTP", 2, 6, ["A", "A", "A"]],
+    ["INTP", 2, 6, ["A", "A", "B"]],
+    ["ESFJ", 2, 6, ["B", "B", "A"]],
+    ["ISFJ", 2, 6, ["B", "B", "B"]],
   ] as const)(
-    "can complete the %s result",
-    (
-      expectedType,
-      firstDeityId,
-      secondDeityId,
-      finalCandidateOptionId,
-      finalCalibrationOptionId,
-    ) => {
+    "can complete the direct %s result",
+    (expectedType, firstDeityId, secondDeityId, finalAnswerIds) => {
       const session = completedPath(
         firstDeityId,
         secondDeityId,
-        finalCandidateOptionId,
-        finalCalibrationOptionId,
+        finalAnswerIds,
       );
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(20);
+      expect(session.history).toHaveLength(21);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
   );
 
-  it("marks a mismatched subconscious calibration for retesting", () => {
-    const session = completedPath(1, 5, "A", "B");
-    const result = calculateResult(session.history, questions);
+  it.each([
+    ["ESFP", 1, 5, ["A", "B", "A", "A"]],
+    ["ENTJ", 1, 5, ["A", "B", "A", "B"]],
+    ["ISFP", 1, 5, ["B", "A", "B", "A"]],
+    ["INTJ", 1, 5, ["B", "A", "B", "B"]],
+    ["ESTP", 1, 6, ["A", "B", "A", "A"]],
+    ["ENFJ", 1, 6, ["A", "B", "A", "B"]],
+    ["ISTP", 1, 6, ["B", "A", "B", "A"]],
+    ["INFJ", 1, 6, ["B", "A", "B", "B"]],
+    ["ENFP", 2, 5, ["A", "B", "A", "A"]],
+    ["ESTJ", 2, 5, ["A", "B", "A", "B"]],
+    ["INFP", 2, 5, ["B", "A", "B", "A"]],
+    ["ISTJ", 2, 5, ["B", "A", "B", "B"]],
+    ["ENTP", 2, 6, ["A", "B", "A", "A"]],
+    ["ESFJ", 2, 6, ["A", "B", "A", "B"]],
+    ["INTP", 2, 6, ["B", "A", "B", "A"]],
+    ["ISFJ", 2, 6, ["B", "A", "B", "B"]],
+  ] as const)(
+    "can complete the mixed-path %s subtype result",
+    (expectedType, firstDeityId, secondDeityId, finalAnswerIds) => {
+      const session = completedPath(
+        firstDeityId,
+        secondDeityId,
+        finalAnswerIds,
+      );
+      const result = calculateResult(session.history, questions);
 
-    expect(session.status).toBe("completed");
-    expect(result.resultTypeId).toBe("ESFP");
-    expect(result.needsRetest).toBe(true);
-    expect(result.calibrationMatched).toBe(false);
-    expect(result.retestReason).toBe(
-      "潜意识校对失败，请遵循本心，返回第三轮题目重选。",
-    );
-  });
+      expect(session.status).toBe("completed");
+      expect(session.history).toHaveLength(22);
+      expect(result.resultTypeId).toBe(expectedType);
+      expect(result.needsRetest).toBe(false);
+    },
+  );
 
-  it("returns a failed calibration to the same third-round choice without clearing earlier rounds", () => {
-    const completed = completedPath(1, 5, "A", "B");
+  it("can return to the same third-round start without clearing earlier rounds", () => {
+    const completed = completedPath(1, 5, ["A", "A", "A"]);
     const retryFinalRound = (
       testEngine as typeof testEngine & {
         retryFinalRound?: (
@@ -533,13 +563,13 @@ describe("eighth-edition scored question bank", () => {
     expect(retried.history.at(-1)?.questionId).toBe("Q_R2_F1_SCORE_8");
     expect(retried.completedAt).toBeUndefined();
 
-    const changedCandidate = answerQuestion(retried, "D", {
+    const changedCandidate = answerQuestion(retried, "B", {
       questions,
       config: testConfig,
       answeredAt: 999,
     }).session;
     expect(changedCandidate.history).toHaveLength(19);
-    expect(changedCandidate.currentQuestionId).toBe("Q_FINAL_GROUP_1_CAL_D");
+    expect(changedCandidate.currentQuestionId).toBe("Q_FINAL_GROUP_1_2");
   });
 });
 
@@ -563,7 +593,7 @@ describe("session invariants", () => {
   });
 
   it("restores a completed dynamically routed session", () => {
-    const completed = completedPath(4, 8, "D", "B");
+    const completed = completedPath(4, 8, ["B", "B", "B"]);
     const restored = restoreTestSession(
       JSON.parse(JSON.stringify(completed)),
       questions,
