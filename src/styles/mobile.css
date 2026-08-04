@@ -53,6 +53,7 @@
   .visual-theme--c.mobile-layout .home-screen,
   .visual-theme--c.mobile-layout .question-screen,
   .visual-theme--c.mobile-layout .blessing-screen,
+  .visual-theme--c.mobile-layout .final-blessing-screen,
   .visual-theme--c.mobile-layout .result-screen {
     width: 100%;
     padding-right: max(0.75rem, env(safe-area-inset-right));
@@ -117,7 +118,8 @@
   .visual-theme--c.mobile-layout .home-actions button,
   .visual-theme--c.mobile-layout .result-actions button,
   .visual-theme--c.mobile-layout .confirm-actions button,
-  .visual-theme--c.mobile-layout .blessing-card button {
+  .visual-theme--c.mobile-layout .blessing-card button,
+  .visual-theme--c.mobile-layout .final-blessing-continue {
     min-height: 2.75rem;
   }
 
@@ -335,6 +337,57 @@
 
   .visual-theme--c.mobile-layout .blessing-card button {
     width: 100%;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-screen {
+    align-content: start;
+    min-height: calc(100svh - var(--header-height) - env(safe-area-inset-top));
+    padding-top: 0.65rem;
+    padding-bottom: max(0.9rem, env(safe-area-inset-bottom));
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-panel {
+    padding: 0.95rem 0.2rem 1rem;
+    background:
+      linear-gradient(180deg, rgba(2, 3, 8, 0.32), rgba(2, 3, 8, 0.72));
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-heading {
+    margin-bottom: 0.9rem;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-kicker {
+    margin-bottom: 0.35rem;
+    font-size: 0.64rem;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-heading h1 {
+    font-size: clamp(2.25rem, 11.5vw, 3.25rem);
+    line-height: 1.05;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-deities {
+    gap: 0.55rem 0.45rem;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-deity__portrait {
+    aspect-ratio: 4 / 5;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-deity figcaption {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-message {
+    margin: 1rem 0.45rem 0.85rem;
+    font-size: 0.94rem;
+    letter-spacing: 0.025em;
+    line-height: 1.7;
+  }
+
+  .visual-theme--c.mobile-layout .final-blessing-continue {
+    width: calc(100% - 0.9rem);
   }
 
   .visual-theme--c.mobile-layout .result-screen {
