@@ -983,6 +983,48 @@
   color: #fbf8f3;
 }
 
+.visual-theme--c .final-blessing-screen {
+  width: min(calc(100% - 3rem), 82rem);
+  padding-block: 1.5rem 3rem;
+}
+
+.visual-theme--c .final-blessing-panel {
+  padding: clamp(1.5rem, 3vw, 2.75rem);
+  border-width: 1px 0;
+  border-radius: 0;
+  border-color: rgba(245, 241, 235, 0.18);
+  background:
+    linear-gradient(90deg, transparent, rgba(2, 3, 8, 0.66) 16% 84%, transparent),
+    rgba(2, 3, 8, 0.12);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.visual-theme--c .final-blessing-kicker {
+  color: rgba(245, 241, 235, 0.58);
+}
+
+.visual-theme--c .final-blessing-heading h1 {
+  color: #fbf8f3;
+  font-size: clamp(3.1rem, 6vw, 5.8rem);
+  font-weight: 400;
+}
+
+.visual-theme--c .final-blessing-deity__portrait {
+  border-radius: 0;
+  border-color: rgba(245, 241, 235, 0.18);
+  box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.34);
+}
+
+.visual-theme--c .final-blessing-deity figcaption {
+  color: rgba(251, 248, 243, 0.92);
+}
+
+.visual-theme--c .final-blessing-message {
+  color: rgba(251, 248, 243, 0.9);
+}
+
 .visual-theme--c .result-screen {
   width: min(calc(100% - 4rem), 82rem);
   padding-top: clamp(3rem, 8vw, 7rem);
