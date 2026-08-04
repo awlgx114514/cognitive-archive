@@ -7,9 +7,11 @@ import {
 import { getBlessingRound } from "../engine/deityScoring";
 import { calculateResult } from "../engine/resultResolver";
 import {
+  advancePastRoundBlessing,
   answerQuestion,
   countUncertainSelections,
   createTestSession,
+  finishFinalBlessing,
   finishTransition,
   getPreviousQuestionId,
   getRecordedAnswer,
@@ -45,6 +47,7 @@ export type UseTestSessionValue = {
   reset: () => void;
   complete: () => void;
   continueAfterBlessing: () => void;
+  continueAfterFinalBlessing: () => void;
   goToQuestion: (questionId: string) => void;
   clearError: () => void;
 };
@@ -220,7 +223,15 @@ export function useTestSession(): UseTestSessionValue {
     if (current.status !== "transitioning") return;
     submissionLockedRef.current = false;
     setError(null);
-    commitSession(finishTransition(current));
+    commitSession(advancePastRoundBlessing(current));
+  }, [commitSession]);
+
+  const continueAfterFinalBlessing = useCallback(() => {
+    const current = sessionRef.current;
+    if (current.status !== "final-blessing") return;
+    submissionLockedRef.current = false;
+    setError(null);
+    commitSession(finishFinalBlessing(current));
   }, [commitSession]);
 
   const goToQuestion = useCallback(
@@ -282,6 +293,7 @@ export function useTestSession(): UseTestSessionValue {
     reset,
     complete,
     continueAfterBlessing,
+    continueAfterFinalBlessing,
     goToQuestion,
     clearError: () => setError(null),
   };
