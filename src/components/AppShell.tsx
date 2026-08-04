@@ -8,14 +8,21 @@ import { getResultTypeById } from "../data/resultTypes";
 import { getTransitionSceneById } from "../data/transitionScenes";
 import {
   getBlessingRound,
+  finalGroupForDeities,
   resolveRoundWinner,
 } from "../engine/deityScoring";
+import { finalBlessingGroups } from "../data/finalBlessings";
+import type {
+  FirstRoundDeityId,
+  SecondRoundDeityId,
+} from "../data/deities";
 import { analyzeConfiguredPaths } from "../engine/pathAnalysis";
 import { validateDemoContent } from "../engine/validation";
 import { useTestSession } from "../hooks/useTestSession";
 import BlessingScreen from "./BlessingScreen";
 import ConfirmDialog from "./ConfirmDialog";
 import DevPanel from "./DevPanel";
+import FinalBlessingScreen from "./FinalBlessingScreen";
 import HomeScreen from "./HomeScreen";
 import MysticBackground from "./MysticBackground";
 import QuestionScreen from "./QuestionScreen";
@@ -42,6 +49,7 @@ export function AppShell() {
     reset,
     complete,
     continueAfterBlessing,
+    continueAfterFinalBlessing,
     goToQuestion,
     clearError,
   } = useTestSession();
@@ -58,7 +66,8 @@ export function AppShell() {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (
         session.status !== "in-progress" &&
-        session.status !== "transitioning"
+        session.status !== "transitioning" &&
+        session.status !== "final-blessing"
       ) {
         return;
       }
@@ -73,7 +82,8 @@ export function AppShell() {
   const requestHome = () => {
     if (
       session.status === "in-progress" ||
-      session.status === "transitioning"
+      session.status === "transitioning" ||
+      session.status === "final-blessing"
     ) {
       setConfirmIntent("leave");
     } else {
@@ -128,6 +138,17 @@ export function AppShell() {
   const blessingResolution = blessingRound
     ? resolveRoundWinner(session.history, blessingRound)
     : undefined;
+  const finalBlessingGroup =
+    session.status === "final-blessing"
+      ? finalBlessingGroups[
+          finalGroupForDeities(
+            resolveRoundWinner(session.history, 1)
+              .winnerId as FirstRoundDeityId,
+            resolveRoundWinner(session.history, 2)
+              .winnerId as SecondRoundDeityId,
+          )
+        ]
+      : undefined;
   const activeDeityId =
     blessingResolution?.winnerId ??
     (currentQuestion && session.status !== "completed"
@@ -246,6 +267,13 @@ export function AppShell() {
         deityId={blessingResolution.winnerId}
         round={blessingRound}
         onContinue={continueAfterBlessing}
+      />
+    );
+  } else if (finalBlessingGroup) {
+    content = (
+      <FinalBlessingScreen
+        group={finalBlessingGroup}
+        onContinue={continueAfterFinalBlessing}
       />
     );
   } else if (currentQuestion) {
