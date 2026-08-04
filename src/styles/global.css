@@ -1406,6 +1406,110 @@ button:disabled,
   letter-spacing: 0.08em;
 }
 
+/* Collective blessing before the final round */
+.final-blessing-screen {
+  display: grid;
+  place-items: center;
+  width: min(calc(100% - 2rem), 74rem);
+  min-height: calc(100dvh - 8rem);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3.5rem) 0;
+  animation: archive-fade-up var(--duration-slow) var(--ease-out) both;
+}
+
+.final-blessing-panel {
+  width: 100%;
+  padding: clamp(1.5rem, 4.5vw, 3.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.2rem;
+  background: rgba(3, 4, 10, 0.58);
+  box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.4);
+  text-align: center;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.final-blessing-heading {
+  margin-bottom: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.final-blessing-kicker {
+  margin: 0 0 0.55rem;
+  color: var(--gold-bright);
+  font-size: var(--text-xs);
+  letter-spacing: 0.18em;
+}
+
+.final-blessing-heading h1 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 4.8rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.12;
+  text-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.92);
+}
+
+.final-blessing-deities {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.65rem, 2vw, 1.35rem);
+}
+
+.final-blessing-deity {
+  min-width: 0;
+  margin: 0;
+}
+
+.final-blessing-deity__portrait {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.7rem;
+  background: rgba(2, 3, 8, 0.72);
+  box-shadow: 0 0.9rem 2.2rem rgba(0, 0, 0, 0.3);
+}
+
+.final-blessing-deity__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.final-blessing-deity__portrait span {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 62%, rgba(2, 3, 8, 0.72));
+  pointer-events: none;
+}
+
+.final-blessing-deity figcaption {
+  margin-top: 0.75rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: var(--font-display);
+  font-size: clamp(0.98rem, 1.5vw, 1.25rem);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0.15rem 0.8rem #000;
+}
+
+.final-blessing-message {
+  max-width: 58rem;
+  margin: clamp(1.5rem, 3.5vw, 2.5rem) auto 1.5rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2.1vw, 1.45rem);
+  letter-spacing: 0.04em;
+  line-height: 1.85;
+  text-shadow: 0 0.15rem 1rem rgba(0, 0, 0, 0.95);
+}
+
+.final-blessing-continue {
+  min-width: min(100%, 15rem);
+}
+
 @media (max-width: 760px) {
   .blessing-card {
     grid-template-columns: 1fr;
@@ -1425,6 +1529,28 @@ button:disabled,
     padding-top: 0;
     position: relative;
     z-index: 1;
+  }
+
+  .final-blessing-screen {
+    min-height: calc(100dvh - 6rem);
+    padding-block: 1rem;
+  }
+
+  .final-blessing-panel {
+    padding: 1.25rem 0.85rem 1.4rem;
+  }
+
+  .final-blessing-deities {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem 0.55rem;
+  }
+
+  .final-blessing-deity__portrait {
+    aspect-ratio: 4 / 5;
+  }
+
+  .final-blessing-deity figcaption {
+    margin-top: 0.45rem;
   }
 }
 
