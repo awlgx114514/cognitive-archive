@@ -10,12 +10,16 @@ import {
   scoreTargetForAnswer,
 } from "./deityScoring";
 import {
+  advancePastRoundBlessing,
   answerQuestion,
   countUncertainSelections,
   createTestSession,
+  enterFinalBlessing,
+  finishFinalBlessing,
   finishTransition,
   getAnswerAvailability,
   goBackOneStep,
+  isTestSessionSnapshot,
   restoreTestSession,
   startTestSession,
 } from "./testEngine";
@@ -574,6 +578,52 @@ describe("ninth-edition scored question bank", () => {
 });
 
 describe("session invariants", () => {
+  it("inserts the collective blessing only after the second round blessing", () => {
+    const base = startTestSession(createTestSession(1), 1);
+    const historyEntry = (questionId: string) => ({
+      questionId,
+      selectedOptionId: "A" as const,
+      nextQuestionId: "Q_FINAL_GROUP_1_1",
+      transitionSceneId: "scene-score",
+      answeredAt: 2,
+    });
+    const firstRound: TestSession = {
+      ...base,
+      status: "transitioning",
+      history: [historyEntry("Q_R1_SCORE_8")],
+    };
+    const secondRound: TestSession = {
+      ...base,
+      status: "transitioning",
+      currentQuestionId: "Q_FINAL_GROUP_1_1",
+      history: [historyEntry("Q_R2_F1_SCORE_8")],
+    };
+
+    expect(advancePastRoundBlessing(firstRound).status).toBe("in-progress");
+    expect(advancePastRoundBlessing(secondRound).status).toBe(
+      "final-blessing",
+    );
+  });
+
+  it("persists the collective blessing between round two and the final questions", () => {
+    const transitioning: TestSession = {
+      ...startTestSession(createTestSession(1), 1),
+      status: "transitioning",
+      currentQuestionId: "Q_FINAL_GROUP_1_1",
+    };
+
+    const blessing = enterFinalBlessing(transitioning);
+    expect(blessing.status).toBe("final-blessing");
+    expect(blessing.currentQuestionId).toBe("Q_FINAL_GROUP_1_1");
+    expect(isTestSessionSnapshot(JSON.parse(JSON.stringify(blessing)))).toBe(
+      true,
+    );
+
+    const continued = finishFinalBlessing(blessing);
+    expect(continued.status).toBe("in-progress");
+    expect(continued.currentQuestionId).toBe("Q_FINAL_GROUP_1_1");
+  });
+
   it("keeps uncertain unavailable throughout the new bank", () => {
     const finalQuestion = getQuestionById("Q_FINAL_GROUP_1_1")!;
     expect(getAnswerAvailability(finalQuestion, "A", []).allowed).toBe(true);
