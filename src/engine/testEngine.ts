@@ -3,7 +3,7 @@ import {
   testConfig as demoTestConfig,
   UNCERTAIN_LIMIT_MESSAGE,
 } from "../data/testConfig";
-import { resolveDynamicRoute } from "./deityScoring";
+import { getBlessingRound, resolveDynamicRoute } from "./deityScoring";
 import type {
   AnswerAvailability,
   AnswerOption,
@@ -306,6 +306,24 @@ export function finishTransition(session: TestSession): TestSession {
   return { ...session, status: "in-progress" };
 }
 
+export function enterFinalBlessing(session: TestSession): TestSession {
+  if (session.status !== "transitioning") return session;
+  return { ...session, status: "final-blessing" };
+}
+
+export function finishFinalBlessing(session: TestSession): TestSession {
+  if (session.status !== "final-blessing") return session;
+  return { ...session, status: "in-progress" };
+}
+
+export function advancePastRoundBlessing(session: TestSession): TestSession {
+  if (session.status !== "transitioning") return session;
+  const blessingRound = getBlessingRound(session.history.at(-1)?.questionId);
+  return blessingRound === 2
+    ? enterFinalBlessing(session)
+    : finishTransition(session);
+}
+
 export function getPreviousQuestionId(
   session: TestSession,
 ): string | undefined {
@@ -431,9 +449,13 @@ export function isTestSessionSnapshot(value: unknown): value is TestSession {
     typeof candidate.currentQuestionId === "string" &&
     typeof candidate.startedAt === "number" &&
     Array.isArray(candidate.history) &&
-    ["not-started", "in-progress", "transitioning", "completed"].includes(
-      candidate.status ?? "",
-    )
+    [
+      "not-started",
+      "in-progress",
+      "transitioning",
+      "final-blessing",
+      "completed",
+    ].includes(candidate.status ?? "")
   );
 }
 
