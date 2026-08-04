@@ -122,6 +122,7 @@ export type SessionStatus =
   | "not-started"
   | "in-progress"
   | "transitioning"
+  | "final-blessing"
   | "completed";
 
 export type TestSession = {
