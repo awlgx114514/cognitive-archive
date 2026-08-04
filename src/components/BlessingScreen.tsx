@@ -34,7 +34,7 @@ export function BlessingScreen({
             className="primary-button"
             onClick={onContinue}
           >
-            {round === 1 ? "进入第二步" : "进入主神位"}
+            {round === 1 ? "进入第二步" : "查看共同祝福"}
           </button>
         </div>
       </div>
