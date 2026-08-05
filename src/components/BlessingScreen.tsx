@@ -28,7 +28,9 @@ export function BlessingScreen({
           </p>
           <h1 id="blessing-title">{deity.name}</h1>
           <p className="blessing-description">{deity.description}</p>
-          <p className="blessing-message">你得到该神祇的祝福</p>
+          <p className="blessing-message">
+            {round === 1 ? "你得到该神祇的祝福" : "你得到两位神祇的祝福"}
+          </p>
           <button
             type="button"
             className="primary-button"
