@@ -380,7 +380,7 @@ export function retryFinalRound(
     const question = questionMap.get(entry.questionId);
     return Boolean(
       question?.stage === "calibration" &&
-        /^Q_FINAL_GROUP_[1-4]_1$/.test(question.id),
+        /^Q_FINAL_GROUP_[1-8]_1$/.test(question.id),
     );
   });
 
