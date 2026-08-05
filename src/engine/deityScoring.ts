@@ -56,15 +56,20 @@ const firstRoundScoreTargets = [
 ] as const satisfies readonly (readonly [FirstRoundDeityId, FirstRoundDeityId])[];
 
 const secondRoundScoreTargets = [
-  [5, 6],
-  [7, 8],
-  [5, 6],
-  [7, 8],
-  [5, 7],
-  [6, 8],
-  [5, 7],
-  [6, 8],
-] as const satisfies readonly (readonly [SecondRoundDeityId, SecondRoundDeityId])[];
+  [
+    [6, 7],
+    [5, 8],
+  ],
+  [
+    [5, 8],
+    [6, 7],
+  ],
+] as const satisfies readonly (
+  readonly [
+    readonly [SecondRoundDeityId, SecondRoundDeityId],
+    readonly [SecondRoundDeityId, SecondRoundDeityId],
+  ]
+)[];
 
 function formalOptionIndex(optionId: AnswerOptionId): 0 | 1 | undefined {
   if (optionId === "A") return 0;
@@ -98,18 +103,28 @@ export function scoreTargetForAnswer(
   ordinal: number,
   optionId: AnswerOptionId,
 ): DeityId | undefined {
+  return scoreTargetsForAnswer(round, ordinal, optionId)[0];
+}
+
+export function scoreTargetsForAnswer(
+  round: ScoreRound,
+  ordinal: number,
+  optionId: AnswerOptionId,
+): readonly DeityId[] {
   const optionIndex = formalOptionIndex(optionId);
-  if (optionIndex === undefined || ordinal < 1 || ordinal > 8) return undefined;
-  const targets =
-    round === 1 ? firstRoundScoreTargets : secondRoundScoreTargets;
-  return targets[ordinal - 1]?.[optionIndex];
+  if (optionIndex === undefined || ordinal < 1) return [];
+  if (round === 1) {
+    const target = firstRoundScoreTargets[ordinal - 1]?.[optionIndex];
+    return target ? [target] : [];
+  }
+  return secondRoundScoreTargets[ordinal - 1]?.[optionIndex] ?? [];
 }
 
 function scoreOrdinal(questionId: string, round: ScoreRound): number | undefined {
   const match =
     round === 1
       ? /^Q_R1_SCORE_([1-8])$/.exec(questionId)
-      : /^Q_R2_F[1-4]_SCORE_([1-8])$/.exec(questionId);
+      : /^Q_R2_F[1-4]_SCORE_([1-2])$/.exec(questionId);
   return match?.[1] ? Number(match[1]) : undefined;
 }
 
@@ -133,8 +148,12 @@ export function calculateRoundScores(
   for (const entry of history) {
     const ordinal = scoreOrdinal(entry.questionId, round);
     if (!ordinal) continue;
-    const target = scoreTargetForAnswer(round, ordinal, entry.selectedOptionId);
-    if (target) scores[target] += 1;
+    const targets = scoreTargetsForAnswer(
+      round,
+      ordinal,
+      entry.selectedOptionId,
+    );
+    for (const target of targets) scores[target] += 1;
   }
 
   return scores;
@@ -259,7 +278,7 @@ export function resolveDynamicRoute(
   }
 
   if (route === "second-round-score") {
-    const firstMatch = /^Q_R2_F([1-4])_SCORE_8$/.exec(currentQuestionId);
+    const firstMatch = /^Q_R2_F([1-4])_SCORE_2$/.exec(currentQuestionId);
     if (!firstMatch?.[1]) {
       throw new Error(
         `Cannot resolve second-round route from ${currentQuestionId}.`,
@@ -292,6 +311,6 @@ export function getBlessingRound(
   questionId: string | undefined,
 ): ScoreRound | undefined {
   if (questionId === "Q_R1_SCORE_8") return 1;
-  if (/^Q_R2_F[1-4]_SCORE_8$/.test(questionId ?? "")) return 2;
+  if (/^Q_R2_F[1-4]_SCORE_2$/.test(questionId ?? "")) return 2;
   return undefined;
 }
