@@ -215,17 +215,23 @@ function makeSecondRoundScoreQuestions(
     const nextQuestionId = isLast
       ? undefined
       : `Q_R2_F${firstWinnerId}_SCORE_${ordinal + 1}`;
-    const finalGroups =
-      firstWinnerId === 1 || firstWinnerId === 4
-        ? ["Q_FINAL_GROUP_1_1", "Q_FINAL_GROUP_2_1"]
-        : ["Q_FINAL_GROUP_3_1", "Q_FINAL_GROUP_4_1"];
+    const finalGroupsByFirstWinner = {
+      1: ["Q_FINAL_GROUP_1_1", "Q_FINAL_GROUP_3_1"],
+      2: ["Q_FINAL_GROUP_5_1", "Q_FINAL_GROUP_7_1"],
+      3: ["Q_FINAL_GROUP_6_1", "Q_FINAL_GROUP_8_1"],
+      4: ["Q_FINAL_GROUP_2_1", "Q_FINAL_GROUP_4_1"],
+    } as const satisfies Readonly<
+      Record<FirstRoundDeityId, readonly [string, string]>
+    >;
     return makeQuestion({
       id,
       question: seed.question,
       a: { title: seed.a, nextQuestionId },
       b: { title: seed.b, nextQuestionId },
       dynamicRoute: isLast ? "second-round-score" : undefined,
-      dynamicNextQuestionIds: isLast ? finalGroups : undefined,
+      dynamicNextQuestionIds: isLast
+        ? [...finalGroupsByFirstWinner[firstWinnerId]]
+        : undefined,
       internalNote: `round=2; first-winner=${firstWinnerId}; score-question=${ordinal}`,
     });
   });
@@ -258,24 +264,29 @@ function makeSecondRoundSelection(
   });
 }
 
-type FinalGroup = 1 | 2 | 3 | 4;
+type FinalQuestionGroup = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 type FinalBinarySeed = BinaryQuestionSeed & {
-  resultTypeIds?: readonly [string, string];
+  resultTypeIds: readonly [string, string];
+};
+
+type FinalFourOptionSeed = {
+  question: string;
+  a: string;
+  b: string;
+  c: string;
+  d: string;
+  resultTypeIds: readonly [string, string, string, string];
 };
 
 type FinalGroupSeed = {
-  first: FinalBinarySeed;
-  second: FinalBinarySeed;
-  directA: FinalBinarySeed;
-  directB: FinalBinarySeed;
-  mixed: FinalBinarySeed;
-  mixedA: FinalBinarySeed;
-  mixedB: FinalBinarySeed;
+  first: BinaryQuestionSeed;
+  direct: FinalBinarySeed;
+  fallback: FinalFourOptionSeed;
 };
 
 function makeFinalGroupQuestions(
-  group: FinalGroup,
+  group: FinalQuestionGroup,
   seed: FinalGroupSeed,
 ): QuestionNode[] {
   const consistencyGroupId = `FINAL_GROUP_${group}`;
@@ -293,63 +304,34 @@ function makeFinalGroupQuestions(
     calibrationTypeId: resultTypeId,
     internalNote: `result=${resultTypeId}`,
   });
-  const terminalQuestion = (
-    suffix: "3_1" | "3_2" | "4_1" | "4_2",
-    terminalSeed: FinalBinarySeed,
-  ): QuestionNode => {
-    const resultTypeIds = terminalSeed.resultTypeIds;
-    if (!resultTypeIds) {
-      throw new Error(`Final group ${group} ${suffix} is missing result mappings.`);
-    }
-    return makeQuestion({
-      id: `${prefix}_${suffix}`,
-      question: terminalSeed.question,
-      a: terminalOption(terminalSeed.a, resultTypeIds[0]),
-      b: terminalOption(terminalSeed.b, resultTypeIds[1]),
-      ...common,
-      internalNote: `Final group ${group}; terminal=${suffix}`,
-    });
-  };
-
-  const first = makeQuestion({
-    id: `Q_FINAL_GROUP_${group}_1`,
-    question: seed.first.question,
-    a: { title: seed.first.a, nextQuestionId: `${prefix}_2` },
-    b: { title: seed.first.b, nextQuestionId: `${prefix}_2` },
-    ...common,
-    internalNote: `Final group ${group}; answer-pair=first`,
-  });
-  const second = makeQuestion({
-    id: `${prefix}_2`,
-    question: seed.second.question,
-    a: { title: seed.second.a },
-    b: { title: seed.second.b },
-    dynamicRoute: "final-answer-pair",
-    dynamicNextQuestionIds: [
-      `${prefix}_3_1`,
-      `${prefix}_3_2`,
-      `${prefix}_3_3`,
-    ],
-    ...common,
-    internalNote: `Final group ${group}; answer-pair=second; aa→3.1; bb→3.2; ab/ba→3.3`,
-  });
-  const mixed = makeQuestion({
-    id: `${prefix}_3_3`,
-    question: seed.mixed.question,
-    a: { title: seed.mixed.a, nextQuestionId: `${prefix}_4_1` },
-    b: { title: seed.mixed.b, nextQuestionId: `${prefix}_4_2` },
-    ...common,
-    internalNote: `Final group ${group}; mixed branch`,
-  });
 
   return [
-    first,
-    second,
-    terminalQuestion("3_1", seed.directA),
-    terminalQuestion("3_2", seed.directB),
-    mixed,
-    terminalQuestion("4_1", seed.mixedA),
-    terminalQuestion("4_2", seed.mixedB),
+    makeQuestion({
+      id: `${prefix}_1`,
+      question: seed.first.question,
+      a: { title: seed.first.a, nextQuestionId: `${prefix}_2` },
+      b: { title: seed.first.b, nextQuestionId: `${prefix}_3` },
+      ...common,
+      internalNote: `Final group ${group}; A→2; B→3`,
+    }),
+    makeQuestion({
+      id: `${prefix}_2`,
+      question: seed.direct.question,
+      a: terminalOption(seed.direct.a, seed.direct.resultTypeIds[0]),
+      b: terminalOption(seed.direct.b, seed.direct.resultTypeIds[1]),
+      ...common,
+      internalNote: `Final group ${group}; two-option terminal`,
+    }),
+    makeQuestion({
+      id: `${prefix}_3`,
+      question: seed.fallback.question,
+      a: terminalOption(seed.fallback.a, seed.fallback.resultTypeIds[0]),
+      b: terminalOption(seed.fallback.b, seed.fallback.resultTypeIds[1]),
+      c: terminalOption(seed.fallback.c, seed.fallback.resultTypeIds[2]),
+      d: terminalOption(seed.fallback.d, seed.fallback.resultTypeIds[3]),
+      ...common,
+      internalNote: `Final group ${group}; four-option terminal`,
+    }),
   ];
 }
 
@@ -359,46 +341,50 @@ const secondRoundNodes = firstRoundDeityIds.flatMap((firstWinnerId) => [
   ...makeSecondRoundScoreQuestions(firstWinnerId),
 ]);
 
-const finalGroupSeeds: Readonly<Record<FinalGroup, FinalGroupSeed>> = {
+const finalGroupSeeds: Readonly<Record<FinalQuestionGroup, FinalGroupSeed>> = {
   1: {
-    first: { question: "最接近你最核心的本能的是？", a: "倾听内心与体验享乐", b: "执行规划与想象洞察" },
-    second: { question: "令你更恐惧的一组是？", a: "未来噩运缠身＆工作重负到过载", b: "情绪崩溃失控＆嘈杂到大脑宕机" },
-    directA: { question: "符合你内心过程的描述是？", a: "倾听内心是为了体验享乐", b: "参与体验是为了内心价值", resultTypeIds: ["ESFP", "ISFP"] },
-    directB: { question: "符合你内心过程的描述是？", a: "想象洞察是为了完成任务", b: "规划工作是为了洞察预测", resultTypeIds: ["ENTJ", "INTJ"] },
-    mixed: { question: "最接近你最核心的本能的是？", a: "体验享乐与执行规划", b: "倾听内心与想象洞察" },
-    mixedA: { question: "令你更恐惧的是？", a: "未来噩运缠身", b: "情绪崩溃失控", resultTypeIds: ["ESFP", "ENTJ"] },
-    mixedB: { question: "令你更恐惧的是？", a: "工作重负到过载", b: "嘈杂到大脑宕机", resultTypeIds: ["ISFP", "INTJ"] },
+    first: { question: "最接近你核心本能的是？", a: "体验享乐与倾听内心", b: "执行规划与想象洞察" },
+    direct: { question: "符合你内心过程的描述是？", a: "倾听内心是为了体验享乐", b: "参与体验是为了内心价值", resultTypeIds: ["ESFP", "ISFP"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "体验享乐", b: "内心价值", c: "完成任务", d: "洞察预测", resultTypeIds: ["ESFP", "ISFP", "ENTJ", "INTJ"] },
   },
   2: {
-    first: { question: "最接近你最核心的本能的是？", a: "拆解逻辑与体验享乐", b: "想象洞察与肯定赞美他人" },
-    second: { question: "令你更恐惧的一组是？", a: "未来噩运缠身＆社交过载", b: "说出伤害他人的真话＆嘈杂到大脑宕机" },
-    directA: { question: "符合你内心过程的描述是？", a: "拆解逻辑是为了体验享受", b: "参与体验是为了理解底层原理", resultTypeIds: ["ESTP", "ISTP"] },
-    directB: { question: "符合你内心过程的描述是？", a: "想象洞察是为了与他人联结", b: "肯定赞美他人是为了洞察预测", resultTypeIds: ["ENFJ", "INFJ"] },
-    mixed: { question: "最接近你最核心的本能的是？", a: "体验享乐与肯定赞美他人", b: "拆解逻辑与想象洞察" },
-    mixedA: { question: "令你更恐惧的是？", a: "未来噩运缠身", b: "说出伤害他人的真话", resultTypeIds: ["ESTP", "ENFJ"] },
-    mixedB: { question: "令你更恐惧的是？", a: "社交过载", b: "嘈杂到大脑宕机", resultTypeIds: ["ISTP", "INFJ"] },
+    first: { question: "最接近你核心本能的是？", a: "执行规划与想象洞察", b: "体验享乐与倾听内心" },
+    direct: { question: "符合你内心过程的描述是？", a: "想象洞察是为了完成任务", b: "规划工作是为了洞察预测", resultTypeIds: ["ENTJ", "INTJ"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "体验享乐", b: "内心价值", c: "完成任务", d: "洞察预测", resultTypeIds: ["ESFP", "ISFP", "ENTJ", "INTJ"] },
   },
   3: {
-    first: { question: "最接近你最核心的本能的是？", a: "倾听内心与灵感涌现", b: "执行规划与验证复盘" },
-    second: { question: "令你更恐惧的一组是？", a: "重复机械的日常工作＆工作重负到过载", b: "情绪崩溃失控＆混乱" },
-    directA: { question: "符合你内心过程的描述是？", a: "倾听内心是为了灵感涌现", b: "灵感涌现是为了内心价值", resultTypeIds: ["ENFP", "INFP"] },
-    directB: { question: "符合你内心过程的描述是？", a: "验证复盘是为了完成任务", b: "效率规划是为了验证复盘", resultTypeIds: ["ESTJ", "ISTJ"] },
-    mixed: { question: "最接近你最核心的本能的是？", a: "灵感涌现与执行规划", b: "倾听内心与验证复盘" },
-    mixedA: { question: "令你更恐惧的是？", a: "重复机械的日常工作", b: "情绪崩溃失控", resultTypeIds: ["ENFP", "ESTJ"] },
-    mixedB: { question: "令你更恐惧的是？", a: "工作重负到过载", b: "混乱", resultTypeIds: ["INFP", "ISTJ"] },
+    first: { question: "最接近你核心本能的是？", a: "体验享乐与拆解逻辑", b: "肯定赞美他人与想象洞察" },
+    direct: { question: "符合你内心过程的描述是？", a: "拆解逻辑是为了体验享受", b: "参与体验是为了理解底层原理", resultTypeIds: ["ESTP", "ISTP"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "体验享乐", b: "理解底层原理", c: "与他人共情并建立联结", d: "洞察预测", resultTypeIds: ["ESTP", "ISTP", "ENFJ", "INFJ"] },
   },
   4: {
-    first: { question: "最接近你最核心的本能的是？", a: "拆解逻辑与灵感涌现", b: "肯定赞美他人与验证复盘" },
-    second: { question: "令你更恐惧的一组是？", a: "重复机械的日常工作＆社交过载", b: "说出伤害他人的真话＆混乱" },
-    directA: { question: "符合你内心过程的描述是？", a: "拆解逻辑是为了灵感涌现", b: "灵感涌现是为了理解底层原理", resultTypeIds: ["ENTP", "INTP"] },
-    directB: { question: "符合你内心过程的描述是？", a: "验证复盘是为了联结他人", b: "赞美肯定他人是为了验证复盘", resultTypeIds: ["ESFJ", "ISFJ"] },
-    mixed: { question: "最接近你最核心的本能的是？", a: "灵感涌现与赞美肯定他人", b: "拆解逻辑与验证复盘" },
-    mixedA: { question: "令你更恐惧的是？", a: "重复机械的日常工作", b: "说出伤害他人的真话", resultTypeIds: ["ENTP", "ESFJ"] },
-    mixedB: { question: "令你更恐惧的是？", a: "社交过载", b: "混乱", resultTypeIds: ["INTP", "ISFJ"] },
+    first: { question: "最接近你核心本能的是？", a: "肯定赞美他人与想象洞察", b: "体验享乐与拆解逻辑" },
+    direct: { question: "符合你内心过程的描述是？", a: "想象洞察是为了与他人共情并建立联结", b: "肯定赞美他人是为了洞察预测", resultTypeIds: ["ENFJ", "INFJ"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "体验享乐", b: "理解底层原理", c: "与他人共情并建立联结", d: "洞察预测", resultTypeIds: ["ESTP", "ISTP", "ENFJ", "INFJ"] },
+  },
+  5: {
+    first: { question: "最接近你核心本能的是？", a: "灵感涌现与倾听内心", b: "执行规划与验证复盘" },
+    direct: { question: "符合你内心过程的描述是？", a: "倾听内心是为了灵感涌现", b: "灵感涌现是为了内心价值", resultTypeIds: ["ENFP", "INFP"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "灵感涌现", b: "内心价值", c: "完成任务", d: "验证复盘", resultTypeIds: ["ENFP", "INFP", "ESTJ", "ISTJ"] },
+  },
+  6: {
+    first: { question: "最接近你核心本能的是？", a: "执行规划与验证复盘", b: "灵感涌现与倾听内心" },
+    direct: { question: "符合你内心过程的描述是？", a: "验证复盘是为了执行规划", b: "执行规划是为了验证复盘", resultTypeIds: ["ESTJ", "ISTJ"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "灵感涌现", b: "内心价值", c: "完成任务", d: "验证复盘", resultTypeIds: ["ENFP", "INFP", "ESTJ", "ISTJ"] },
+  },
+  7: {
+    first: { question: "最接近你核心本能的是？", a: "灵感涌现与拆解逻辑", b: "肯定赞美他人与验证复盘" },
+    direct: { question: "符合你内心过程的描述是？", a: "拆解逻辑是为了灵感涌现", b: "灵感涌现是为了理解底层原理", resultTypeIds: ["ENTP", "INTP"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "灵感涌现", b: "理解底层原理", c: "与他人共情并建立联结", d: "验证复盘", resultTypeIds: ["ENTP", "INTP", "ESFJ", "ISFJ"] },
+  },
+  8: {
+    first: { question: "最接近你核心的本能的是？", a: "肯定赞美他人与验证复盘", b: "拆解逻辑与灵感涌现" },
+    direct: { question: "符合你内心过程的描述是？", a: "验证复盘是为了与他人共情并建立联结", b: "肯定赞美他人与验证复盘", resultTypeIds: ["ESFJ", "ISFJ"] },
+    fallback: { question: "下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", a: "灵感涌现", b: "理解底层原理", c: "与与他人共情并建立联结", d: "验证复盘", resultTypeIds: ["ENTP", "INTP", "ESFJ", "ISFJ"] },
   },
 };
 
-const finalQuestions = ([1, 2, 3, 4] as const).flatMap((group) =>
+const finalQuestions = ([1, 2, 3, 4, 5, 6, 7, 8] as const).flatMap((group) =>
   makeFinalGroupQuestions(group, finalGroupSeeds[group]),
 );
 
