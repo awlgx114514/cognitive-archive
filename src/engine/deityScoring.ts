@@ -183,6 +183,20 @@ export function finalGroupForDeities(
   return 4;
 }
 
+export type FinalQuestionGroup = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+/** Resolves the exact deity pair to its tenth-edition third-round group. */
+export function finalQuestionGroupForDeities(
+  firstDeityId: FirstRoundDeityId,
+  secondDeityId: SecondRoundDeityId,
+): FinalQuestionGroup {
+  const secondIsTeFi = secondDeityId === 5 || secondDeityId === 8;
+  if (firstDeityId === 1) return secondIsTeFi ? 1 : 3;
+  if (firstDeityId === 4) return secondIsTeFi ? 2 : 4;
+  if (firstDeityId === 2) return secondIsTeFi ? 5 : 7;
+  return secondIsTeFi ? 6 : 8;
+}
+
 function resolveFinalBranch(
   history: readonly HistoryEntry[],
   group: 1 | 2 | 3 | 4,
@@ -254,7 +268,7 @@ export function resolveDynamicRoute(
     const firstWinner = Number(firstMatch[1]) as FirstRoundDeityId;
     const secondWinner = resolveRoundWinner(history, 2)
       .winnerId as SecondRoundDeityId;
-    return `Q_FINAL_GROUP_${finalGroupForDeities(firstWinner, secondWinner)}_1`;
+    return `Q_FINAL_GROUP_${finalQuestionGroupForDeities(firstWinner, secondWinner)}_1`;
   }
 
   if (route === "final-answer-pair") {
