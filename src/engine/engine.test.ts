@@ -98,6 +98,25 @@ function visibleQuestionTuple(
   ];
 }
 
+function visibleFinalQuestionTuple(
+  questionId: string,
+): readonly [
+  string | undefined,
+  string | undefined,
+  string | undefined,
+  string | undefined,
+  string | undefined,
+] {
+  const question = getQuestionById(questionId);
+  return [
+    question?.shortQuestion,
+    question?.options.A.title,
+    question?.options.B.title,
+    question?.options.C?.title,
+    question?.options.D?.title,
+  ];
+}
+
 function answerPath(answerIds: readonly AnswerOptionId[]): TestSession {
   let session = startTestSession(createTestSession(1), 1);
   answerIds.forEach((answerId, index) => {
@@ -125,19 +144,20 @@ function completedPath(
   ]);
 }
 
-describe("ninth-edition scored question bank", () => {
-  it("is structurally valid and complete routes contain 21 or 22 answers", () => {
+describe("tenth-edition scored question bank", () => {
+  it("is structurally valid and every complete route contains 20 answers", () => {
     const report = validateDemoContent();
     const analysis = analyzeConfiguredPaths();
 
     expect(report.valid).toBe(true);
     expect(report.errors).toHaveLength(0);
     expect(analysis.incompletePaths).toHaveLength(0);
-    expect(analysis.shortestPathLength).toBe(21);
-    expect(analysis.longestPathLength).toBe(22);
-    expect(testConfig.minimumPathLength).toBe(21);
-    expect(testConfig.maximumPathLength).toBe(22);
-    expect(testConfig.storageVersion).toBe("12.0.0");
+    expect(analysis.shortestPathLength).toBe(20);
+    expect(analysis.longestPathLength).toBe(20);
+    expect(testConfig.minimumPathLength).toBe(20);
+    expect(testConfig.recommendedPathLength).toBe(20);
+    expect(testConfig.maximumPathLength).toBe(20);
+    expect(testConfig.storageVersion).toBe("13.0.0");
   });
 
   it("starts each round with the requested four deity cards", () => {
@@ -178,7 +198,7 @@ describe("ninth-edition scored question bank", () => {
     );
   });
 
-  it("contains the exact ninth-edition first and second round wording", () => {
+  it("keeps the exact first and second round wording unchanged", () => {
     const expectedFirstRound = [
       ["健康无恙时你更喜欢？", "身体舒适", "脑嗨"],
       [
@@ -276,92 +296,75 @@ describe("ninth-edition scored question bank", () => {
     );
   });
 
-  it("contains the exact ninth-edition adaptive final-round wording", () => {
+  it("contains the exact tenth-edition final-round wording", () => {
     const expectedGroups = {
       1: [
-        ["最接近你最核心的本能的是？", "倾听内心与体验享乐", "执行规划与想象洞察"],
-        ["令你更恐惧的一组是？", "未来噩运缠身＆工作重负到过载", "情绪崩溃失控＆嘈杂到大脑宕机"],
-        ["符合你内心过程的描述是？", "倾听内心是为了体验享乐", "参与体验是为了内心价值"],
-        ["符合你内心过程的描述是？", "想象洞察是为了完成任务", "规划工作是为了洞察预测"],
-        ["最接近你最核心的本能的是？", "体验享乐与执行规划", "倾听内心与想象洞察"],
-        ["令你更恐惧的是？", "未来噩运缠身", "情绪崩溃失控"],
-        ["令你更恐惧的是？", "工作重负到过载", "嘈杂到大脑宕机"],
+        ["最接近你核心本能的是？", "体验享乐与倾听内心", "执行规划与想象洞察", undefined, undefined],
+        ["符合你内心过程的描述是？", "倾听内心是为了体验享乐", "参与体验是为了内心价值", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "体验享乐", "内心价值", "完成任务", "洞察预测"],
       ],
       2: [
-        ["最接近你最核心的本能的是？", "拆解逻辑与体验享乐", "想象洞察与肯定赞美他人"],
-        ["令你更恐惧的一组是？", "未来噩运缠身＆社交过载", "说出伤害他人的真话＆嘈杂到大脑宕机"],
-        ["符合你内心过程的描述是？", "拆解逻辑是为了体验享受", "参与体验是为了理解底层原理"],
-        ["符合你内心过程的描述是？", "想象洞察是为了与他人联结", "肯定赞美他人是为了洞察预测"],
-        ["最接近你最核心的本能的是？", "体验享乐与肯定赞美他人", "拆解逻辑与想象洞察"],
-        ["令你更恐惧的是？", "未来噩运缠身", "说出伤害他人的真话"],
-        ["令你更恐惧的是？", "社交过载", "嘈杂到大脑宕机"],
+        ["最接近你核心本能的是？", "执行规划与想象洞察", "体验享乐与倾听内心", undefined, undefined],
+        ["符合你内心过程的描述是？", "想象洞察是为了完成任务", "规划工作是为了洞察预测", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "体验享乐", "内心价值", "完成任务", "洞察预测"],
       ],
       3: [
-        ["最接近你最核心的本能的是？", "倾听内心与灵感涌现", "执行规划与验证复盘"],
-        ["令你更恐惧的一组是？", "重复机械的日常工作＆工作重负到过载", "情绪崩溃失控＆混乱"],
-        ["符合你内心过程的描述是？", "倾听内心是为了灵感涌现", "灵感涌现是为了内心价值"],
-        ["符合你内心过程的描述是？", "验证复盘是为了完成任务", "效率规划是为了验证复盘"],
-        ["最接近你最核心的本能的是？", "灵感涌现与执行规划", "倾听内心与验证复盘"],
-        ["令你更恐惧的是？", "重复机械的日常工作", "情绪崩溃失控"],
-        ["令你更恐惧的是？", "工作重负到过载", "混乱"],
+        ["最接近你核心本能的是？", "体验享乐与拆解逻辑", "肯定赞美他人与想象洞察", undefined, undefined],
+        ["符合你内心过程的描述是？", "拆解逻辑是为了体验享受", "参与体验是为了理解底层原理", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "体验享乐", "理解底层原理", "与他人共情并建立联结", "洞察预测"],
       ],
       4: [
-        ["最接近你最核心的本能的是？", "拆解逻辑与灵感涌现", "肯定赞美他人与验证复盘"],
-        ["令你更恐惧的一组是？", "重复机械的日常工作＆社交过载", "说出伤害他人的真话＆混乱"],
-        ["符合你内心过程的描述是？", "拆解逻辑是为了灵感涌现", "灵感涌现是为了理解底层原理"],
-        ["符合你内心过程的描述是？", "验证复盘是为了联结他人", "赞美肯定他人是为了验证复盘"],
-        ["最接近你最核心的本能的是？", "灵感涌现与赞美肯定他人", "拆解逻辑与验证复盘"],
-        ["令你更恐惧的是？", "重复机械的日常工作", "说出伤害他人的真话"],
-        ["令你更恐惧的是？", "社交过载", "混乱"],
+        ["最接近你核心本能的是？", "肯定赞美他人与想象洞察", "体验享乐与拆解逻辑", undefined, undefined],
+        ["符合你内心过程的描述是？", "想象洞察是为了与他人共情并建立联结", "肯定赞美他人是为了洞察预测", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "体验享乐", "理解底层原理", "与他人共情并建立联结", "洞察预测"],
+      ],
+      5: [
+        ["最接近你核心本能的是？", "灵感涌现与倾听内心", "执行规划与验证复盘", undefined, undefined],
+        ["符合你内心过程的描述是？", "倾听内心是为了灵感涌现", "灵感涌现是为了内心价值", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "灵感涌现", "内心价值", "完成任务", "验证复盘"],
+      ],
+      6: [
+        ["最接近你核心本能的是？", "执行规划与验证复盘", "灵感涌现与倾听内心", undefined, undefined],
+        ["符合你内心过程的描述是？", "验证复盘是为了执行规划", "执行规划是为了验证复盘", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "灵感涌现", "内心价值", "完成任务", "验证复盘"],
+      ],
+      7: [
+        ["最接近你核心本能的是？", "灵感涌现与拆解逻辑", "肯定赞美他人与验证复盘", undefined, undefined],
+        ["符合你内心过程的描述是？", "拆解逻辑是为了灵感涌现", "灵感涌现是为了理解底层原理", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "灵感涌现", "理解底层原理", "与他人共情并建立联结", "验证复盘"],
+      ],
+      8: [
+        ["最接近你核心的本能的是？", "肯定赞美他人与验证复盘", "拆解逻辑与灵感涌现", undefined, undefined],
+        ["符合你内心过程的描述是？", "验证复盘是为了与他人共情并建立联结", "肯定赞美他人与验证复盘", undefined, undefined],
+        ["下列哪一项符合你日常自发且能获得最深层满足感的心理状态？", "灵感涌现", "理解底层原理", "与与他人共情并建立联结", "验证复盘"],
       ],
     } as const;
-    const suffixes = ["1", "2", "3_1", "3_2", "3_3", "4_1", "4_2"] as const;
 
-    for (const group of [1, 2, 3, 4] as const) {
+    for (const group of [1, 2, 3, 4, 5, 6, 7, 8] as const) {
       expect(
-        suffixes.map((suffix) =>
-          visibleQuestionTuple(`Q_FINAL_GROUP_${group}_${suffix}`),
+        ["1", "2", "3"].map((suffix) =>
+          visibleFinalQuestionTuple(`Q_FINAL_GROUP_${group}_${suffix}`),
         ),
       ).toEqual(expectedGroups[group]);
     }
   });
 
-  it.each([1, 2, 3, 4] as const)(
-    "routes final group %s from the first two answers exactly as documented",
+  it.each([1, 2, 3, 4, 5, 6, 7, 8] as const)(
+    "routes final group %s from its first answer exactly as documented",
     (group) => {
       const prefix = `Q_FINAL_GROUP_${group}`;
       const first = getQuestionById(`${prefix}_1`)!;
       const second = getQuestionById(`${prefix}_2`)!;
-      const deityPairs = {
-        1: [1, 5],
-        2: [1, 6],
-        3: [2, 5],
-        4: [2, 6],
-      } as const;
-      const [firstDeityId, secondDeityId] = deityPairs[group];
-      const prelude = [
-        firstSelectionAnswers[firstDeityId],
-        ...firstWinnerAnswers[firstDeityId],
-        secondSelectionAnswers[secondDeityId],
-        ...secondWinnerAnswers[secondDeityId],
-      ] as const;
+      const third = getQuestionById(`${prefix}_3`)!;
 
       expect(first.options.A.nextQuestionId).toBe(`${prefix}_2`);
-      expect(first.options.B.nextQuestionId).toBe(`${prefix}_2`);
-      expect(second.dynamicRoute).toBe("final-answer-pair");
-
-      expect(answerPath([...prelude, "A", "A"]).currentQuestionId).toBe(
-        `${prefix}_3_1`,
-      );
-      expect(answerPath([...prelude, "B", "B"]).currentQuestionId).toBe(
-        `${prefix}_3_2`,
-      );
-      expect(answerPath([...prelude, "A", "B"]).currentQuestionId).toBe(
-        `${prefix}_3_3`,
-      );
-      expect(answerPath([...prelude, "B", "A"]).currentQuestionId).toBe(
-        `${prefix}_3_3`,
-      );
+      expect(first.options.B.nextQuestionId).toBe(`${prefix}_3`);
+      expect(second.options.A.terminal).toBe(true);
+      expect(second.options.B.terminal).toBe(true);
+      expect(third.options.A.terminal).toBe(true);
+      expect(third.options.B.terminal).toBe(true);
+      expect(third.options.C?.terminal).toBe(true);
+      expect(third.options.D?.terminal).toBe(true);
     },
   );
 
@@ -459,12 +462,34 @@ describe("ninth-edition scored question bank", () => {
     [4, 7, 2],
     [4, 8, 1],
   ] as const)(
-    "maps deity pair %s%s to final group %s",
+    "keeps deity pair %s%s in collective blessing group %s",
     (firstDeityId, secondDeityId, expectedGroup) => {
       expect(finalGroupForDeities(firstDeityId, secondDeityId)).toBe(
         expectedGroup,
       );
+    },
+  );
 
+  it.each([
+    [1, 5, 1],
+    [1, 8, 1],
+    [4, 5, 2],
+    [4, 8, 2],
+    [1, 6, 3],
+    [1, 7, 3],
+    [4, 6, 4],
+    [4, 7, 4],
+    [2, 5, 5],
+    [2, 8, 5],
+    [3, 5, 6],
+    [3, 8, 6],
+    [2, 6, 7],
+    [2, 7, 7],
+    [3, 6, 8],
+    [3, 7, 8],
+  ] as const)(
+    "routes exact deity pair %s%s to tenth-edition final group %s",
+    (firstDeityId, secondDeityId, expectedGroup) => {
       const session = answerPath([
         firstSelectionAnswers[firstDeityId],
         ...firstWinnerAnswers[firstDeityId],
@@ -478,24 +503,24 @@ describe("ninth-edition scored question bank", () => {
   );
 
   it.each([
-    ["ESFP", 1, 5, ["A", "A", "A"]],
-    ["ISFP", 1, 5, ["A", "A", "B"]],
-    ["ENTJ", 1, 5, ["B", "B", "A"]],
-    ["INTJ", 1, 5, ["B", "B", "B"]],
-    ["ESTP", 1, 6, ["A", "A", "A"]],
-    ["ISTP", 1, 6, ["A", "A", "B"]],
-    ["ENFJ", 1, 6, ["B", "B", "A"]],
-    ["INFJ", 1, 6, ["B", "B", "B"]],
-    ["ENFP", 2, 5, ["A", "A", "A"]],
-    ["INFP", 2, 5, ["A", "A", "B"]],
-    ["ESTJ", 2, 5, ["B", "B", "A"]],
-    ["ISTJ", 2, 5, ["B", "B", "B"]],
-    ["ENTP", 2, 6, ["A", "A", "A"]],
-    ["INTP", 2, 6, ["A", "A", "B"]],
-    ["ESFJ", 2, 6, ["B", "B", "A"]],
-    ["ISFJ", 2, 6, ["B", "B", "B"]],
+    ["ESFP", 1, 5, ["A", "A"]],
+    ["ISFP", 1, 5, ["A", "B"]],
+    ["ENTJ", 4, 5, ["A", "A"]],
+    ["INTJ", 4, 5, ["A", "B"]],
+    ["ESTP", 1, 6, ["A", "A"]],
+    ["ISTP", 1, 6, ["A", "B"]],
+    ["ENFJ", 4, 6, ["A", "A"]],
+    ["INFJ", 4, 6, ["A", "B"]],
+    ["ENFP", 2, 5, ["A", "A"]],
+    ["INFP", 2, 5, ["A", "B"]],
+    ["ESTJ", 3, 5, ["A", "A"]],
+    ["ISTJ", 3, 5, ["A", "B"]],
+    ["ENTP", 2, 6, ["A", "A"]],
+    ["INTP", 2, 6, ["A", "B"]],
+    ["ESFJ", 3, 6, ["A", "A"]],
+    ["ISFJ", 3, 6, ["A", "B"]],
   ] as const)(
-    "can complete the direct %s result",
+    "can complete the two-option %s result",
     (expectedType, firstDeityId, secondDeityId, finalAnswerIds) => {
       const session = completedPath(
         firstDeityId,
@@ -505,31 +530,31 @@ describe("ninth-edition scored question bank", () => {
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(21);
+      expect(session.history).toHaveLength(20);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
   );
 
   it.each([
-    ["ESFP", 1, 5, ["A", "B", "A", "A"]],
-    ["ENTJ", 1, 5, ["A", "B", "A", "B"]],
-    ["ISFP", 1, 5, ["B", "A", "B", "A"]],
-    ["INTJ", 1, 5, ["B", "A", "B", "B"]],
-    ["ESTP", 1, 6, ["A", "B", "A", "A"]],
-    ["ENFJ", 1, 6, ["A", "B", "A", "B"]],
-    ["ISTP", 1, 6, ["B", "A", "B", "A"]],
-    ["INFJ", 1, 6, ["B", "A", "B", "B"]],
-    ["ENFP", 2, 5, ["A", "B", "A", "A"]],
-    ["ESTJ", 2, 5, ["A", "B", "A", "B"]],
-    ["INFP", 2, 5, ["B", "A", "B", "A"]],
-    ["ISTJ", 2, 5, ["B", "A", "B", "B"]],
-    ["ENTP", 2, 6, ["A", "B", "A", "A"]],
-    ["ESFJ", 2, 6, ["A", "B", "A", "B"]],
-    ["INTP", 2, 6, ["B", "A", "B", "A"]],
-    ["ISFJ", 2, 6, ["B", "A", "B", "B"]],
+    ["ESFP", 1, 5, ["B", "A"]],
+    ["ISFP", 1, 5, ["B", "B"]],
+    ["ENTJ", 1, 5, ["B", "C"]],
+    ["INTJ", 1, 5, ["B", "D"]],
+    ["ESTP", 1, 6, ["B", "A"]],
+    ["ISTP", 1, 6, ["B", "B"]],
+    ["ENFJ", 1, 6, ["B", "C"]],
+    ["INFJ", 1, 6, ["B", "D"]],
+    ["ENFP", 2, 5, ["B", "A"]],
+    ["INFP", 2, 5, ["B", "B"]],
+    ["ESTJ", 2, 5, ["B", "C"]],
+    ["ISTJ", 2, 5, ["B", "D"]],
+    ["ENTP", 2, 6, ["B", "A"]],
+    ["INTP", 2, 6, ["B", "B"]],
+    ["ESFJ", 2, 6, ["B", "C"]],
+    ["ISFJ", 2, 6, ["B", "D"]],
   ] as const)(
-    "can complete the mixed-path %s subtype result",
+    "can complete the four-option fallback %s result",
     (expectedType, firstDeityId, secondDeityId, finalAnswerIds) => {
       const session = completedPath(
         firstDeityId,
@@ -539,14 +564,14 @@ describe("ninth-edition scored question bank", () => {
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(22);
+      expect(session.history).toHaveLength(20);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
   );
 
   it("can return to the same third-round start without clearing earlier rounds", () => {
-    const completed = completedPath(1, 5, ["A", "A", "A"]);
+    const completed = completedPath(3, 6, ["A", "A"]);
     const retryFinalRound = (
       testEngine as typeof testEngine & {
         retryFinalRound?: (
@@ -562,9 +587,9 @@ describe("ninth-edition scored question bank", () => {
     const retried = retryFinalRound(completed, questions);
 
     expect(retried.status).toBe("in-progress");
-    expect(retried.currentQuestionId).toBe("Q_FINAL_GROUP_1_1");
+    expect(retried.currentQuestionId).toBe("Q_FINAL_GROUP_8_1");
     expect(retried.history).toHaveLength(18);
-    expect(retried.history.at(-1)?.questionId).toBe("Q_R2_F1_SCORE_8");
+    expect(retried.history.at(-1)?.questionId).toBe("Q_R2_F3_SCORE_8");
     expect(retried.completedAt).toBeUndefined();
 
     const changedCandidate = answerQuestion(retried, "B", {
@@ -573,7 +598,7 @@ describe("ninth-edition scored question bank", () => {
       answeredAt: 999,
     }).session;
     expect(changedCandidate.history).toHaveLength(19);
-    expect(changedCandidate.currentQuestionId).toBe("Q_FINAL_GROUP_1_2");
+    expect(changedCandidate.currentQuestionId).toBe("Q_FINAL_GROUP_8_3");
   });
 });
 
