@@ -59,10 +59,10 @@ const secondWinnerAnswers: Record<
   SecondDeityId,
   readonly AnswerOptionId[]
 > = {
-  5: ["A", "A", "A", "A", "A", "A", "A", "A"],
-  6: ["B", "A", "B", "A", "B", "A", "B", "A"],
-  7: ["A", "A", "A", "A", "B", "A", "B", "A"],
-  8: ["A", "B", "A", "B", "A", "B", "A", "B"],
+  5: ["B", "A"],
+  6: ["A", "B"],
+  7: ["A", "B"],
+  8: ["B", "A"],
 };
 
 const firstScoreTargets = [
@@ -74,17 +74,6 @@ const firstScoreTargets = [
   [2, 4],
   [1, 3],
   [2, 4],
-] as const;
-
-const secondScoreTargets = [
-  [5, 6],
-  [7, 8],
-  [5, 6],
-  [7, 8],
-  [5, 7],
-  [6, 8],
-  [5, 7],
-  [6, 8],
 ] as const;
 
 function visibleQuestionTuple(
@@ -144,20 +133,20 @@ function completedPath(
   ]);
 }
 
-describe("tenth-edition scored question bank", () => {
-  it("is structurally valid and every complete route contains 20 answers", () => {
+describe("eleventh-edition scored question bank", () => {
+  it("is structurally valid and every complete route contains 14 answers", () => {
     const report = validateDemoContent();
     const analysis = analyzeConfiguredPaths();
 
     expect(report.valid).toBe(true);
     expect(report.errors).toHaveLength(0);
     expect(analysis.incompletePaths).toHaveLength(0);
-    expect(analysis.shortestPathLength).toBe(20);
-    expect(analysis.longestPathLength).toBe(20);
-    expect(testConfig.minimumPathLength).toBe(20);
-    expect(testConfig.recommendedPathLength).toBe(20);
-    expect(testConfig.maximumPathLength).toBe(20);
-    expect(testConfig.storageVersion).toBe("13.0.0");
+    expect(analysis.shortestPathLength).toBe(14);
+    expect(analysis.longestPathLength).toBe(14);
+    expect(testConfig.minimumPathLength).toBe(14);
+    expect(testConfig.recommendedPathLength).toBe(14);
+    expect(testConfig.maximumPathLength).toBe(14);
+    expect(testConfig.storageVersion).toBe("14.0.0");
   });
 
   it("starts each round with the requested four deity cards", () => {
@@ -198,7 +187,7 @@ describe("tenth-edition scored question bank", () => {
     );
   });
 
-  it("keeps the exact first and second round wording unchanged", () => {
+  it("keeps the exact first round and eleventh-edition second round wording", () => {
     const expectedFirstRound = [
       ["健康无恙时你更喜欢？", "身体舒适", "脑嗨"],
       [
@@ -237,40 +226,14 @@ describe("tenth-edition scored question bank", () => {
 
     const expectedSecondRound = [
       [
-        "当团队遇到危机，进度严重滞后，成员们情绪低落，你作为负责人会？",
-        "制定流程和标准重启效率",
-        "解决人心和凝聚力重振士气",
-      ],
-      [
-        "你会把匿名票投给哪位演讲嘉宾？",
-        "观点与我一致但似曾相识的陌生人",
-        "观点与我矛盾但关系融洽的好友",
-      ],
-      [
-        "公司机构臃肿，上层勾心斗角，你会如何力挽狂澜？",
-        "裁员，调研清楚后果断裁员，不惜把一整个部门裁撤",
-        "替换，跨部门人员调整，把有能力有工作热情的人换上来，悄无声息地完成权力交接。",
-      ],
-      ["你捍卫自己哪条底线？", "利益不被他人裹挟", "好恶不随世俗逐流"],
-      [
-        "面对一个“实践证明有效，但底层逻辑矛盾”的方案，你的本能反应是？",
-        "管用就行，拿到结果最重要，懒得死磕逻辑瑕疵",
-        "有点难受，想把它背后的逻辑推导顺了",
-      ],
-      [
-        "听完朋友长时间负面情绪的倾诉后，你感到？",
-        "很累像被对方情绪污染",
-        "无感像看剧一样完全抽离",
+        "你捍卫自己哪条底线？",
+        "利益不被他人裹挟",
+        "好恶不随世俗逐流",
       ],
       [
         "如果意外捡到一块奇石，你会如何思考？",
         "考虑使用奇石，比如收藏或拍卖",
         "思考本质，奇石是什么？从哪来？有没有危险或价值？",
-      ],
-      [
-        "看到别人皱眉或面露不悦，你会下意识地留意吗？",
-        "难免留心在意，甚至见不得别人受苦",
-        "鲜少关心重视，“子非鱼焉知鱼之乐”",
       ],
     ] as const;
     expect(
@@ -393,12 +356,34 @@ describe("tenth-edition scored question bank", () => {
     });
   });
 
-  it("uses the exact second-round score mapping", () => {
-    secondScoreTargets.forEach(([aTarget, bTarget], index) => {
-      expect(scoreTargetForAnswer(2, index + 1, "A")).toBe(aTarget);
-      expect(scoreTargetForAnswer(2, index + 1, "B")).toBe(bTarget);
-    });
-  });
+  it.each([
+    [1, "A", [6, 7]],
+    [1, "B", [5, 8]],
+    [2, "A", [5, 8]],
+    [2, "B", [6, 7]],
+  ] as const)(
+    "awards second-round question %s option %s to both documented deities",
+    (ordinal, optionId, targetIds) => {
+      const scoredDeityIds: readonly SecondDeityId[] = targetIds;
+      const scores = calculateRoundScores(
+        [
+          {
+            questionId: `Q_R2_F1_SCORE_${ordinal}`,
+            selectedOptionId: optionId,
+            transitionSceneId: "scene-score",
+            answeredAt: 1,
+          },
+        ],
+        2,
+      );
+
+      for (const deityId of [5, 6, 7, 8] as const) {
+        expect(scores[deityId]).toBe(
+          scoredDeityIds.includes(deityId) ? 1 : 0,
+        );
+      }
+    },
+  );
 
   it("counts the initial deity selection as one point", () => {
     const session = answerPath(["D"]);
@@ -530,7 +515,7 @@ describe("tenth-edition scored question bank", () => {
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(20);
+      expect(session.history).toHaveLength(14);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
@@ -564,7 +549,7 @@ describe("tenth-edition scored question bank", () => {
       const result = calculateResult(session.history, questions);
 
       expect(session.status).toBe("completed");
-      expect(session.history).toHaveLength(20);
+      expect(session.history).toHaveLength(14);
       expect(result.resultTypeId).toBe(expectedType);
       expect(result.needsRetest).toBe(false);
     },
@@ -588,8 +573,8 @@ describe("tenth-edition scored question bank", () => {
 
     expect(retried.status).toBe("in-progress");
     expect(retried.currentQuestionId).toBe("Q_FINAL_GROUP_8_1");
-    expect(retried.history).toHaveLength(18);
-    expect(retried.history.at(-1)?.questionId).toBe("Q_R2_F3_SCORE_8");
+    expect(retried.history).toHaveLength(12);
+    expect(retried.history.at(-1)?.questionId).toBe("Q_R2_F3_SCORE_2");
     expect(retried.completedAt).toBeUndefined();
 
     const changedCandidate = answerQuestion(retried, "B", {
@@ -597,7 +582,7 @@ describe("tenth-edition scored question bank", () => {
       config: testConfig,
       answeredAt: 999,
     }).session;
-    expect(changedCandidate.history).toHaveLength(19);
+    expect(changedCandidate.history).toHaveLength(13);
     expect(changedCandidate.currentQuestionId).toBe("Q_FINAL_GROUP_8_3");
   });
 });
@@ -621,7 +606,7 @@ describe("session invariants", () => {
       ...base,
       status: "transitioning",
       currentQuestionId: "Q_FINAL_GROUP_1_1",
-      history: [historyEntry("Q_R2_F1_SCORE_8")],
+      history: [historyEntry("Q_R2_F1_SCORE_2")],
     };
 
     expect(advancePastRoundBlessing(firstRound).status).toBe("in-progress");
